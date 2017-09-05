@@ -1,0 +1,383 @@
+﻿@model List<Tuple<long, string>>
+@{
+    ViewBag.Title = "商品";
+    ViewBag.Token = JDVOP.Helper.JDRequestHelper<string>.GetToken();
+}
+
+<div class="am-cf am-padding">
+    <div class="am-fl am-cf"><a href="/"><strong class="am-text-primary am-text-lg">首页</strong></a> /<small>商品</small> Token:@ViewBag.Token</div>
+</div>
+<div id="searchDomain">
+
+    <div class="am-g">
+        <div class="am-u-lg-12">
+            <div class="am-input-group am-input-group-sm">
+                <span class="am-input-group-label">商品名称</span>
+                <input type="text" class="am-form-field" placeholder="按商品名称搜索" name="name" ;>
+                <span class="am-input-group-label">商品编号</span>
+                <input type="text" class="am-form-field" placeholder="按商品编号搜索" name="sku" ;>
+                <span class="am-input-group-label">商标名称</span>
+                <input type="text" class="am-form-field" placeholder="按商标名称搜索" name="brandName" ;>
+                <span class="am-input-group-label">状态：</span>
+                <select name="state" data-am-selected="{btnWidth: '80px',btnSize: 'sm'}">
+                    <option value="-1">不限</option>
+                    <option value="0">下架</option>
+                    <option value="1">上架</option>
+                </select>
+                <span class="am-input-group-label   am-margin-left-sm">一级分类：</span>
+                <select id="firstCategory" name="firstCategory" data-am-selected="{btnWidth: '140px',btnSize: 'sm'}" onchange="loadCategorySelect(1)">
+                    @foreach (var item in Model)
+                    {
+                        <option value="@item.Item1">@item.Item2</option>
+                    }
+                </select>
+                <span class="am-input-group-label   am-margin-left-sm">二级分类：</span>
+                <select id="secondCategory" name="secondCategory" data-am-selected="{btnWidth: '140px',btnSize: 'sm'}" onchange="loadCategorySelect(2)"></select>
+                <span class="am-input-group-label   am-margin-left-sm">三级分类：</span>
+                <select id="thirdCategory" name="thirdCategory" data-am-selected="{btnWidth: '140px',btnSize: 'sm'}"></select>
+                <span class="am-input-group-btn am-margin-left-sm">
+                    <button class="am-btn am-btn-default" id="btnSearch" type="button">搜索</button>
+                    <button class="am-btn am-btn-default" onclick="ClearFilter()" type="button">清除</button>
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <div class="am-g am-margin-top-sm">
+        <div class="am-u-lg-6">
+            <div class="am-btn-toolbar">
+                <div class="am-btn-group am-btn-group-xs">
+                    <button class="am-btn am-btn-default" id="refreshSearch" type="button">更新12580库存</button>
+                    <button class="am-btn am-btn-default" id="refreshProductStock" type="button">更新本地库存和价格</button>
+                    <button class="am-btn am-btn-default am-margin-left-sm" id="getProduct" type="button">获取12580京东商品库</button>
+                    <button class="am-btn am-btn-default am-margin-left-sm" id="syncProduct" type="button">同步京东产品</button>
+                    <button class="am-btn am-btn-defaultam-margin-left-sm" id="queryBalance" type="button">查询余额</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="grid_container">
+    <table id="dataTable" class="am-table am-table-striped am-table-hover table-main">
+        <thead>
+            <tr>
+                <th dataname="ID" type="checkbox"></th>
+                <th dataname="name">商品名称</th>
+                <th dataname="CommentCount">评论数</th>
+                <th dataname="price">原价</th>
+                <th dataname="JDprice">京东价</th>
+                <th dataname="stock">库存</th>
+                <th render="showImg">图片</th>
+                <th dataname="brandName">商品名称</th>
+                <th dataname="sku">商品编号</th>
+                <th dataname="productArea">产地</th>
+                <th dataname="categoryStr">分类</th>
+                <th dataname="upc">upc</th>
+                <th dataname="stateStr">上下架状态</th>
+                <th type="eventlist"></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+@section scripts
+{
+
+    <script type="text/javascript">
+
+
+
+        function loadCategorySelect(index) {
+            var obj;
+            var nextObj;
+            if (index == 1) {
+                obj = $("#firstCategory");
+                nextObj = $("#secondCategory");
+                nextObj.html("");
+                $("#thirdCategory").html("");
+            }
+            else if (index == 2) {
+                obj = $("#secondCategory");
+                nextObj = $("#thirdCategory");
+                nextObj.html("");
+            }
+            else {
+                obj = $("#thirdCategory");
+                obj.append('<option value="-1">不限</option>')
+            }
+
+            var value = obj.val();
+            if ((index == 1 || index == 2) && value != "-1") {
+                $.Nuoya.action("/Home/GetSelectItem", { value: value }, function (json) {
+                    $(json).each(function () {
+                        nextObj.append("<option  value='" + this.Item1 + "' >" + this.Item2 + "</option>");
+                    });
+                });
+            }
+        }
+
+        function showImg(item) {
+            return '<a onclick="ShowImage(\'' + item.imagePath + '\')"><img src="http://img13.360buyimg.com/n4/' + item.imagePath + '"/></a>';
+        }
+
+        //展示图片
+        function ShowImage(src) {
+            $("#imgDiv img").attr("src", "http://img13.360buyimg.com/n1/" + src);
+            $("#imgDiv").show();
+        }
+        $(function () {
+            $("#imgDiv").click(function () {
+                $("#imgDiv").hide();
+            });
+        });
+
+        $("#refreshSearch").click(function () {
+            $("#loadingDiv").show();
+            $.Nuoya.action("/Home/Refresh", {}, function (json) {
+                $.Nuoya.alert("更新完成");
+                $("#loadingDiv").hide();
+            });
+        })
+
+        $("#refreshProductStock").click(function () {
+            $("#loadingDiv").show();
+            $.Nuoya.action("/Home/UpdateLocal", {}, function (json) {
+                $.Nuoya.alert("更新完成");
+                $("#loadingDiv").hide();
+            });
+        })
+
+        $("#getProduct").click(function () {
+            $("#loadingDiv").show();
+            $.Nuoya.action("/Home/GetProduct", {}, function (json) {
+                $.Nuoya.alert("更新完成");
+                $("#loadingDiv").hide();
+            });
+        })
+
+        $("#syncProduct").click(function () {
+            $("#loadingDiv").show();
+            $.Nuoya.action("/Home/SyncProduct", {}, function (json) {
+                $.Nuoya.alert("同步完成");
+                $("#loadingDiv").hide();
+            });
+        })
+
+
+        $("#queryBalance").click(function () {
+            $("#loadingDiv").show();
+            $.Nuoya.action("/Home/QueryBalance", {}, function (json) {
+                $.Nuoya.alert(json.result);
+                $("#loadingDiv").hide();
+            });
+        })
+
+        var ue;
+        function ClearFilter() {
+            $("#searchDomain input").val("");
+            $('#searchDomain select').each(function () {
+                $(this).find('option').eq(0).attr('selected', true);
+            })
+        }
+
+
+
+        function LoadProduct(obj) {
+            $.Nuoya.ajaxDialog({
+                width: ($(window).width() - 300) + "px",
+                height: ($(window).height() - 300) + "px",
+                ajaxUrl: "/HtmlTemplates/Product/ProductSearchSingle.html",
+                title: "选择商品",
+                callback: function (e) {
+                    $.Nuoya.grid({
+                        search: {
+                            domainId: "productSearchSingleDomain",
+                            subId: "productSearchSingleBtnSearch"
+                        },
+                        tableId: "productSearchSingleDataTable",
+                        ajaxUrl: "/Home/GetPageList",
+                        pageSize: 10,
+                        events: [
+                            {
+                                className: "am-text-secondary",
+                                icon: "icon-pencil-square-o",
+                                name: "选择",
+                                click: function (item) {
+
+                                    var html = '<div class="am-g am-margin-top">' +
+                        '<input type="hidden" name="Sku" value="' + item.sku + '"/>' +
+                       ' <div class="am-u-md-3 am-text-right">' +
+                            '商品名：' +
+                        '</div>' +
+                        '<div class="am-u-md-3 am-text-left">' +
+                            '<input type="text" name="ProductName" class="am-input-sm" value="' + item.name + '" readonly/>' +
+                        '</div>' +
+                        '<div class="am-u-md-1 am-text-right">' +
+                            '数量：' +
+                        '</div>' +
+                        '<div class="am-u-md-1 am-text-left am-u-end">' +
+                            '<input type="number" name="Count" class="am-input-sm" />' +
+                        '</div>' +
+                    '</div>';
+
+                                    $("#form #selectProduct").append(html);
+                                    e.hide();
+                                }
+                            }
+                        ],
+                        drawCallback: function () {
+                            $.Nuoya.resetModalPosition(e.dialog);
+                        }
+                    });
+                }
+            });
+        }
+
+        $('body').on('change', "#form select:not([name='town'])", function () {
+
+            var obj = $(this);
+            var isProvonice = false;
+            var isCity = false;
+            var isCounty = false;
+            if (obj.prop("name") == "province") {
+                isProvonice = true;
+            }
+            //判断是否市
+            if (obj.prop("name") == "city") {
+                isCity = true;
+            }
+            //判断是否县区
+            if (obj.prop("name") == "county") {
+                isCounty = true;
+            }
+            var value = obj.val();
+            var selectName = obj.html();
+            if (value != "0" && value != "") {
+                $.ajax({
+                    type: "GET",
+                    url: "/home/GetAreaSelectItem?type=" + (isProvonice ? 1 : (isCity ? 2 : 3)) + "&parentId=" + value,
+                    datatype: "json",
+                    success: function (data) {
+                        var data = eval('(' + data.Result + ')');
+                        var citySelectUl = $("#form [name='city']");
+                        var countySelectUl = $("#form [name='county']");
+                        var townSelectUl = $("#form [name='town']");
+                        if (isProvonice) {
+                            citySelectUl.html("");
+                            countySelectUl.html("");
+                            townSelectUl.html("");
+                            $(data.Regions).each(function (index, item) {
+                                citySelectUl.append("<option value='" + item.RegionId + "'>" + item.RegionName + "</li>")
+                            });
+                        }
+                        if (isCity) {
+                            countySelectUl.html("");
+                            townSelectUl.html("");
+                            $(data.Regions).each(function (index, item) {
+                                countySelectUl.append("<option value='" + item.RegionId + "'>" + item.RegionName + "</li>")
+                            });
+
+                        }
+                        if (isCounty) {
+                            townSelectUl.html("");
+                            $(data.Regions).each(function (index, item) {
+                                townSelectUl.append("<option value='" + item.RegionId + "'>" + item.RegionName + "</li>")
+                            });
+
+                        }
+                    }
+                });
+            }
+        });
+
+        var grid = $.Nuoya.grid({
+            tableId: "dataTable",
+            //表格id
+            search: {
+                domainId: "searchDomain",
+                subId: "btnSearch"
+            },
+            ajaxUrl: "/Home/GetPageList",
+            //数据请求地址
+            pageSize: 10,
+            events: [
+                {
+                    className: "am-text-secondary",
+                    icon: "icon-firefox",
+                    name: "详情",
+                    click: function (item) {
+                        window.open("https://item.jd.com/" + item.sku + ".html");
+                    }
+                },
+                {
+                    className: "am-text-success",
+                    icon: "icon-plus",
+                    name: "下单",
+                    click: function (item) {
+                        $.Nuoya.ajaxDialog({
+                            ajaxUrl: "/HtmlTemplates/Product/CreateOrder.html?170616",
+                            title: "下单",
+                            width: ($(window).width() - 200) + "px",
+                            height: ($(window).height() - 200) + "px",
+                            callback: function (e) {
+                                $("#form #selectProduct [name='ProductName']").val(item.name);
+                                $("#form #selectProduct [name='Sku']").val(item.sku);
+                                $.ajax({
+                                    type: "GET",
+                                    url: "/home/GetAreaSelectItem?type=0",
+                                    datatype: "json",
+                                    success: function (data) {
+                                        var data = eval('(' + data.Result + ')');
+                                        var provinceSelectUl = $("#form [name='province']");
+                                        provinceSelectUl.html("");
+                                        $(data.Regions).each(function (index, item) {
+                                            provinceSelectUl.append("<option value='" + item.RegionId + "'>" + item.RegionName + "</li>")
+                                        });
+                                    }
+                                });
+                            },
+                            buttons: [{
+                                label: "保存",
+                                callback: function (e) {
+
+                                    var list = new Array();
+                                    $("#form #selectProduct .am-g").each(function () {
+                                        var sku = $(this).find("[name='Sku']").val();
+                                        var num = $(this).find("[name='Count']").val();
+                                        var name = $(this).find("[name='ProductName']").val();
+                                        if (num < 1) {
+                                            $.Nuoya.alert("请填写商品数量");
+                                            return false;
+                                        }
+                                        list.push({
+                                            skuId: sku,
+                                            num: num,
+                                            name: name
+                                        })
+                                    });
+
+
+                                    $.Nuoya.form("form").ajaxSubmit({
+                                        ajaxUrl: "/Home/CreateOrder",
+                                        params: {
+                                            skuNum: list
+                                        },
+                                        callback: function (data) {
+                                            if (data.Result.Success) {
+                                                e.hide();
+                                                grid.reload();
+                                            }
+                                            else
+                                                $.Nuoya.alert(data.Result.Msg);
+                                        }
+                                    });
+                                }
+                            }]
+                        });
+                    }
+                }
+            ]
+        });
+    </script>
+}

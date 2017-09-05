@@ -1,0 +1,44 @@
+﻿<div class="admin-content">
+    <form id="form" class="am-form am-form-horizontal">
+        <div class="admin-content-body">
+            <div class="am-margin">
+                <div class="am-g am-margin-top">
+                    <div class="am-u-md-3 am-text-right">
+                        发送开始数：
+                    </div>
+                    <div class="am-u-md-5">
+                        <input type="text" name="SkipNum" class="am-input-sm" maxlength="32" placeholder="请输入发送开始数" required>
+                    </div>
+                    <div class="am-hide-sm-only am-u-md-4 am-text-left"><strong class="am-text-danger am-text-sm">*</strong></div>
+                </div>
+                <div class="am-g am-margin-top">
+                    <div class="am-u-md-3 am-text-right">
+                        发送数：
+                    </div>
+                    <div class="am-u-md-5">
+                        <input type="text" name="SendCount" class="am-input-sm" maxlength="32" placeholder="请输入发送数" required>
+                    </div>
+                    <div class="am-hide-sm-only am-u-md-4 am-text-left"><strong class="am-text-danger am-text-sm">*</strong></div>
+                </div>
+                <div class="am-g am-margin-top">
+                    <div class="am-u-md-3 am-text-right">
+                        发送文本：
+                    </div>
+                    <div class="am-u-md-5">
+                        <textarea name="Content" id="Content" onblur="document.getElementById('conentLength').innerHTML = document.getElementById('Content').value.length" required></textarea>
+                    </div>
+                    <div class="am-hide-sm-only am-u-md-4 am-text-left"><strong class="am-text-danger am-text-sm">*</strong><span id="conentLength"></span></div>
+                </div>
+                <div class="am-g am-margin-top">
+                    <div class="am-u-md-3 am-text-right">
+                        必发送手机：
+                    </div>
+                    <div class="am-u-md-5">
+                        <textarea name="AppendMibole">13809545632</textarea>
+                    </div>
+                    <div class="am-hide-sm-only am-u-md-4 am-text-left">多个逗号隔开</div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>

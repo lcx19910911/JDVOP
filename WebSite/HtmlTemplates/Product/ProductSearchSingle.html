@@ -1,0 +1,35 @@
+﻿<div id="productSearchSingleDomain">
+    <div class="am-g">
+        <div class="am-u-lg-9">
+            <div class="am-input-group am-input-group-sm">
+                <span class="am-input-group-label">商品名称</span>
+                <input type="text" class="am-form-field" placeholder="按商品名称搜索" name="name" ;>
+                <span class="am-input-group-btn am-margin-left-sm">
+                    <button class="am-btn am-btn-default" id="productSearchSingleBtnSearch" type="button">搜索</button>
+                </span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="grid_container">
+    <table id="productSearchSingleDataTable" class="am-table am-table-striped am-table-hover table-main">
+        <thead>
+            <tr>
+                <th dataname="ID" type="checkbox"></th>
+                <th dataname="name">商品名称</th>
+                <th dataname="price">原价</th>
+                <th dataname="JDprice">京东价</th>
+                <th dataname="stock">库存</th>
+                <th render="showImg">图片</th>
+                <th dataname="brandName">商品名称</th>
+                <th dataname="productArea">产地</th>
+                <th dataname="categoryStr">分类</th>
+                <th dataname="upc">upc</th>
+                <th dataname="stateStr">上下架状态</th>
+                <th type="eventlist"></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>

@@ -1,0 +1,117 @@
+﻿
+<!doctype html>
+<html class="no-js fixed-layout">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <meta name="apple-mobile-web-app-title" content="Amaze UI" />
+    <title>京东商品</title>
+    <link href="~/Styles/css/amazeui.css" rel="stylesheet" />
+    <link href="~/Scripts/tipso/css/tipso.min.css" rel="stylesheet" />
+    <link href="~/Styles/admin.css" rel="stylesheet" />
+
+
+
+
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script src="~/Scripts/jquery.form.js"></script>
+    <script src="~/Scripts/amazeui.js"></script>
+    <script src="~/Scripts/jquery-validation/js/jquery.validate.js"></script>
+    <script src="~/Scripts/tipso/js/tipso.js"></script>
+    <script src="~/Scripts/Nuoya/nuoya.core.js"></script>
+    <script src="~/Scripts/Nuoya/nuoya.grid.js"></script>
+    <script src="~/Scripts/Nuoya/nuoya.form.js"></script>
+    <script src="~/Scripts/Nuoya/nuoya.other.js"></script>
+    <script src="~/Scripts/file_upload_plug-in.js"></script>
+    <script>
+        //获取Json的日期
+        function RenderDate(data) {
+            var da = eval('new ' + data.replace('/', '', 'g').replace('/', '', 'g'));
+            return da.getFullYear() + "-" + (da.getMonth()+1) + "-" + da.getDate();
+        }
+        //获取Json的时间
+        function RenderTime(data) {
+            var da = eval('new ' + data.replace('/', '', 'g').replace('/', '', 'g'));
+            return da.getFullYear() + "-" + (da.getMonth()+1) + "-" + da.getDate() + " " + da.getHours() + ":" + da.getSeconds() + ":" + da.getMinutes();
+        }
+        //关闭/展示菜单
+        function unState() {
+            var state = $(".admin-sidebar").css("display");
+            if (state == "none")
+                $('.admin-sidebar').show();
+            else
+                $('.admin-sidebar').hide();
+        }
+
+     
+        //返回上一页
+        function BackUrl() {
+            history.go(-1);
+        }
+
+    </script>
+
+</head>
+
+<body>
+    <header class="am-topbar am-topbar-inverse admin-header">
+        <div class="am-topbar-brand">
+            <a href="/home/index"><strong>京东商品---@ViewBag.Title</strong></a>
+        </div>
+        <button class="am-topbar-btn am-topbar-toggle am-btn am-btn-sm am-btn-success am-show-sm-only" data-am-collapse="{target: '#topbar-collapse'}"><span class="am-sr-only">导航切换</span> <span class="am-icon-bars"></span></button>
+        <div class="am-collapse am-topbar-collapse" id="topbar-collapse">
+            <ul class="am-nav am-nav-pills am-topbar-nav am-topbar-right admin-header-list">
+                <li><a href="javascript:;"><span class="am-icon-user">账户</span></a></li>
+
+                @*<li><a href="javascript:changePassword()"><span class="am-icon-download">修改密码</span></a></li>
+                <li><a href="/accout/Quit" class="admin-quit"><span class="am-icon-sign-out"></span> <span>注销</span></a></li>*@
+            </ul>
+        </div>
+    </header>
+    <div class="am-cf admin-main am-text-left">
+
+        <div id="imgDiv" style="opacity:1;background-color:black;width:100%;height:100%;z-index:9000; display:none; position:absolute;">
+            <div style="width:500px; margin:0 auto; z-index:9001;margin-top:10%">
+                <img src="" style="width:100%;" />
+            </div>
+        </div>
+
+        <div id="loadingDiv" style="opacity:0.7;background-color:black;width:100%;height:100%;z-index:9000; display:none; position:absolute;">
+            <div style="width:500px; margin:0 auto; z-index:9001;margin-top:20%">
+                <img src="~/Images/loading.jpg" />
+            </div>
+        </div>
+
+
+        <!-- sidebar start -->
+        <div class="admin-sidebar">
+            <ul class="am-list admin-sidebar-list">
+                <li><a href="/home/index"><span class="am-icon-home"></span> 商品管理</a></li>
+                <li><a href="/home/order"><span class="am-icon-home"></span> 订单管理</a></li>
+                <li><a href="/home/sms"><span class="am-icon-home"></span> 发送短信</a></li>
+            </ul>
+        </div>
+        <!-- sidebar end -->
+        <!-- content start -->
+        <div class="admin-content">
+            <div>
+                @RenderBody()
+            </div>
+
+        </div>
+        <!-- content end -->
+    </div>
+    <a href="#" class="am-icon-btn am-icon-th-list am-show-sm-only admin-menu" data-am-offcanvas="{target: '#admin-offcanvas'}"></a>
+
+
+
+
+    @RenderSection("scripts", false)
+</body>
+</html>
+
+
+

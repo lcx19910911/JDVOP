@@ -1,0 +1,503 @@
+﻿using JDVOP.Model;
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace JDVOP.Dto
+{
+
+    public class ProductDto
+    {
+        [Key]
+        [Required]
+        [MaxLength(32)]
+        public string ID { get; set; }
+
+        public int CMCCId { get; set; }
+
+        /// <summary>
+        /// 商品编号
+        /// </summary>
+        public long sku { get; set; }
+
+        public decimal price { get; set; } = 0;
+
+        public decimal JDprice { get; set; } = 0;
+
+        public int stock { get; set; }
+
+        [MaxLength(128)]
+        public string ImageUrl1 { get; set; }
+        [MaxLength(128)]
+        public string ImageUrl2 { get; set; }
+        [MaxLength(128)]
+        public string ImageUrl3 { get; set; }
+        [MaxLength(128)]
+        public string ImageUrl4 { get; set; }
+        [MaxLength(128)]
+        public string ImageUrl5 { get; set; }
+        [MaxLength(128)]
+        public string ThumbnailUrl40 { get; set; }
+        [MaxLength(128)]
+        public string ThumbnailUrl60 { get; set; }
+        [MaxLength(128)]
+        public string ThumbnailUrl100 { get; set; }
+        [MaxLength(128)]
+        public string ThumbnailUrl160 { get; set; }
+        [MaxLength(128)]
+        public string ThumbnailUrl180 { get; set; }
+
+        [MaxLength(128)]
+        public string ThumbnailUrl220 { get; set; }
+        [MaxLength(128)]
+        public string ThumbnailUrl310 { get; set; }
+        [MaxLength(128)]
+        public string ThumbnailUrl410 { get; set; }
+    }
+
+    /// <summary>
+    /// 除开图书商品
+    /// </summary>
+    [Table("ProductInfo")]
+    public class ProductInfo : ProductDto
+    {
+        /// <summary>
+        /// 重量
+        /// </summary>
+        [MaxLength(64)]
+        public string weight { get; set; }
+        /// <summary>
+        /// 主图地址 。需要在前面添加http://img13.360buyimg.com/n0/  其中n0(最大图)、n1(350*350px)、n2(160*160px)、n3(130*130px)、n4(100*100px) 为图片大小。
+        /// </summary>
+        [MaxLength(512)]
+        public string imagePath { get; set; }
+        /// <summary>
+        /// 上下架状态 1：上架 0：下架
+        /// </summary>
+        public ProductStateEnum state { get; set; }
+        [NotMapped]
+        public string stateStr { get; set; }
+        /// <summary>
+        /// 品牌
+        /// </summary>
+        [MaxLength(256)]
+        public string brandName { get; set; }
+        /// <summary>
+        /// 商品名称
+        /// </summary>
+        [MaxLength(256)]
+        public string name { get; set; }
+        /// <summary>
+        /// 产地
+        /// </summary>
+        [MaxLength(256)]
+        public string productArea { get; set; }
+        /// <summary>
+        /// 条形码
+        /// </summary>
+        [MaxLength(128)]
+        public string upc { get; set; }
+        /// <summary>
+        /// 销售单位
+        /// </summary>
+        [MaxLength(32)]
+        public string saleUnit { get; set; }
+        /// <summary>
+        /// 类别
+        /// </summary>
+        [MaxLength(32)]
+        public string category { get; set; }
+        [NotMapped]
+        public string categoryStr { get; set; }
+        /// <summary>
+        /// 京东自营礼品卡， 只有当sku为京东自营实物礼品卡的时候才有该字段
+        /// </summary>
+        public int eleGift { get; set; }
+
+
+        ///// <summary>
+        ///// 商品介绍
+        ///// </summary>
+        public string introduction { get; set; }
+
+
+        public Nullable<DateTime> CreateDate { get; set; }
+        ///// <summary>
+        ///// 规格参数
+        ///// </summary>
+        //public string param { get; set; }
+        ///// <summary>
+        ///// 版次
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string BatchNo { get; set; }
+        ///// <summary>
+        ///// 印刷时间
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string PrIntegerTime { get; set; }
+        ///// <summary>
+        ///// 印次
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string PrIntegerNo { get; set; }
+        ///// <summary>
+        ///// 正文语言
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string Language { get; set; }
+        ///// <summary>
+        ///// 用纸
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string Papers { get; set; }
+        ///// <summary>
+        ///// 品牌
+        ///// </summary>
+        //[MaxLength(256)]
+        //public string Brand { get; set; }
+        ///// <summary>
+        ///// 媒体评论
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string comments { get; set; }
+        ///// <summary>
+        ///// 插图
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string image { get; set; }
+        ///// <summary>
+        ///// 内容摘要
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string contentDesc { get; set; }
+        ///// <summary>
+        ///// 产品描述
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string relatedProducts { get; set; }
+        ///// <summary>
+        ///// 编辑推荐
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string editerDesc { get; set; }
+        ///// <summary>
+        ///// 目录
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string catalogue { get; set; }
+
+        ///// <summary>
+        ///// 精彩摘要
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string bookAbstract { get; set; }
+        ///// <summary>
+        ///// 作者简介
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string authorDesc { get; set; }
+        ///// <summary>
+        ///// 前言
+        ///// </summary>
+        //[MaxLength(32)]
+        //public string Integerroduction { get; set; }
+
+        public int CommentCount { get; set; }
+
+    }
+
+    /// <summary>
+    /// 商品状态
+    /// </summary>
+    public enum ProductStateEnum
+    {
+        /// <summary>
+        /// 下架
+        /// </summary>
+        [Description("下架")]
+        OffSale = 0,
+        /// <summary>
+        /// 上架
+        /// </summary>
+        [Description("上架")]
+        OnSale = 1,
+    }
+
+    /// <summary>
+    /// 图书
+    /// </summary>
+    public class ProductBook : ProductDto
+    {
+
+        /// <summary>
+        /// book
+        /// </summary>
+        public string skuType { get; set; }
+        /// <summary>
+        /// 著者
+        /// </summary>
+        public string Author { get; set; }
+        /// <summary>
+        /// Editer
+        /// </summary>
+        public string Editer { get; set; }
+        /// <summary>
+        /// 译者
+        /// </summary>
+        public string Transfer { get; set; }
+        /// <summary>
+        /// 绘者
+        /// </summary>
+        public string Drawer { get; set; }
+        /// <summary>
+        /// 校对
+        /// </summary>
+        public string Proofreader { get; set; }
+        /// <summary>
+        /// ISBN
+        /// </summary>
+        public int ISBN { get; set; }
+        /// <summary>
+        /// 出版社
+        /// </summary>
+        public string Publishers { get; set; }
+        /// <summary>
+        /// 开本
+        /// </summary>
+        public string Sheet { get; set; }
+        /// <summary>
+        /// 页数
+        /// </summary>
+        public int Pages { get; set; }
+        /// <summary>
+        /// 包装
+        /// </summary>
+        public string Package { get; set; }
+        /// <summary>
+        /// 出版时间
+        /// </summary>
+        public string PublishTime { get; set; }
+        /// <summary>
+        /// 版次
+        /// </summary>
+        public string BatchNo { get; set; }
+        /// <summary>
+        /// 印刷时间
+        /// </summary>
+        public string PrIntegerTime { get; set; }
+        /// <summary>
+        /// 印次
+        /// </summary>
+        public string PrIntegerNo { get; set; }
+        /// <summary>
+        /// 正文语言
+        /// </summary>
+        public string Language { get; set; }
+        /// <summary>
+        /// 用纸
+        /// </summary>
+        public string Papers { get; set; }
+        /// <summary>
+        /// 品牌
+        /// </summary>
+        public string Brand { get; set; }
+        /// <summary>
+        /// 媒体评论
+        /// </summary>
+        public string comments { get; set; }
+        /// <summary>
+        /// 插图
+        /// </summary>
+        public string image { get; set; }
+        /// <summary>
+        /// 内容摘要
+        /// </summary>
+        public string contentDesc { get; set; }
+        /// <summary>
+        /// 产品描述
+        /// </summary>
+        public string relatedProducts { get; set; }
+        /// <summary>
+        /// 编辑推荐
+        /// </summary>
+        public string editerDesc { get; set; }
+        /// <summary>
+        /// 目录
+        /// </summary>
+        public string catalogue { get; set; }
+
+        /// <summary>
+        /// 精彩摘要
+        /// </summary>
+        public string bookAbstract { get; set; }
+        /// <summary>
+        /// 作者简介
+        /// </summary>
+        public string authorDesc { get; set; }
+        /// <summary>
+        /// 前言
+        /// </summary>
+        public string Integerroduction { get; set; }
+
+    }
+
+    /// <summary>
+    /// 商品状态类
+    /// </summary>
+    public class ProductState : ProductDto
+    {
+        public ProductStateEnum state { get; set; }
+    }
+
+    /// <summary>
+    /// 商品价格
+    /// </summary>
+    public class ProductPrice
+    {
+        public long skuId { get; set; }
+
+        public decimal jdPrice { get; set; }
+        public decimal price { get; set; }
+
+    }
+    /// <summary>
+    /// 商品价格
+    /// </summary>
+    public class MsgProductPrice
+    {
+        public long skuId { get; set; }
+
+        public string jdPrice { get; set; }
+        public string price { get; set; }
+
+    }
+    /// <summary>
+    /// 客户端订单价格快照
+    /// </summary>
+    public class PriceSnap
+    {
+        public long skuId { get; set; }
+
+        public decimal price { get; set; }
+    }
+
+
+    /// <summary>
+    /// 商品图片
+    /// </summary>
+    public class ProductImage
+    {
+
+        public long id { get; set; }
+
+        /// <summary>
+        /// 商品编码
+        /// </summary>
+        public long skuId { get; set; }
+        /// <summary>
+        /// 图片url
+        /// </summary>
+        public string path { get; set; }
+        /// <summary>
+        /// 	1：主图 0：附图
+        /// </summary>
+        public YesOrNoCode isPrimary { get; set; }
+        /// <summary>
+        /// 是否启用	1：是 0：不
+        /// </summary>
+        public YesOrNoCode yn { get; set; }
+        /// <summary>
+        /// 类别
+        /// </summary>
+        public int type { get; set; }
+        /// <summary>
+        /// 特征
+        /// </summary>
+        public string features { get; set; }
+        /// <summary>
+        /// 位置
+        /// </summary>
+        public int? position { get; set; }
+        /// <summary>
+        /// 排序
+        /// </summary>
+        public int? orderSort { get; set; }
+        /// <summary>
+        /// 图片url
+        /// </summary>
+        public DateTime created { get; set; }
+        /// <summary>
+        /// 图片url
+        /// </summary>
+        public DateTime modified { get; set; }
+
+    }
+
+    /// <summary>
+    /// 检查商品是否可售
+    /// </summary>
+    public class ProductCheckRep
+    {
+        /// <summary>
+        /// 商品编码
+        /// </summary>
+        public long skuId { get; set; }
+
+        /// <summary>
+        /// 商品名称
+        /// </summary>
+        public string name { get; set; }
+
+        /// <summary>
+        /// 是否可售，1：是，0：否
+        /// </summary>
+        public YesOrNoCode saleState { get; set; }
+        /// <summary>
+        /// 是否可开增票，1：是，0：否
+        /// </summary>
+        public YesOrNoCode isCanVAT { get; set; }
+
+        /// <summary>
+        /// 是否支持7天无理由退货，1：是，0：否
+        /// </summary>
+        public YesOrNoCode is7ToReturn { get; set; }
+    }
+
+    /// <summary>
+    /// 商品数量
+    /// </summary>
+    public class SkuNum
+    {
+        public long skuId { get; set; }
+
+        public int num { get; set; }
+        public string name { get; set; }
+    }
+
+
+    /// <summary>
+    /// 下单商品属性
+    /// </summary>
+    public class OrderSku : SkuNum
+    {
+        /// <summary>
+        /// 表示是否需要附件，默认每个订单都给附件，默认值为：true，如果客户实在不需要附件bNeedAnnex可以给false，该参数配置为false时请谨慎，真的不会给客户发附件的
+        /// </summary>
+        public bool bNeedAnnex { get; set; } = true;
+        /// <summary>
+        /// 表示是否需要赠品，如赠品无货，可以给false，不影响主商品下单
+        /// </summary>
+        public bool bNeedGift { get; set; } = true;
+
+        //延保商品下单才需要（使用查询商品延保接口，查询商品是否有延保）：
+        //"price":100, "yanbao":[{"skuId":商品编号}]}](最高支持50种商品)
+        //主数据配置才需要：（没有通知不需要传）
+        //price 表示透传价格，需要合同权限，接受价格权限，否则不允许传该值；
+    }
+}

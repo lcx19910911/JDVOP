@@ -1,0 +1,77 @@
+﻿@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>登录</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="renderer" content="webkit">
+    <meta http-equiv="Cache-Control" content="no-siteapp" />
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script type="application/x-javascript"> addEventListener("load", function() { setTimeout(hideURLbar, 0); }, false); function hideURLbar(){ window.scrollTo(0,1); } </script>
+    <meta name="keywords" content="登录"/>
+    <link href="~/Styles/reg.css" rel="stylesheet" />
+</head>
+<body>
+    <div class="main">
+        <div class="header">
+            <h1>登录</h1>
+        </div>
+        <form>
+            <ul class="dataform">
+                <li>
+                    <lable class="info">账号:</lable><input type="text" placeholder="账号" required  id="account"/>
+                    <div class="clear"> </div>
+                </li>
+                <li>
+                    <lable class="info">密码:</lable><input type="password" placeholder="请输入密码" required id="password"/>
+                    <div class="clear"> </div>
+                </li>
+                <button  class="submit-btn" style="height:50px;margin-left:10%;">登录</button>
+                <div class="clear"> </div>
+            </ul>
+            <div class="clear"> </div>
+
+        </form>
+
+    </div>
+
+    <script src="~/Scripts/jquery-1.10.2.js"></script>
+    <script type="text/javascript">
+        $(".submit-btn").on("click",function (event) {
+            var account = $("#account").val();
+            var password = $("#password").val();
+            if (account == "") {
+                alert("请输入账号");
+                return false;
+            }
+            if (password == "") {
+                alert("请输入密码");
+                return false;
+            }
+            $.ajax({
+                type: 'get',
+                url: "/account/Submit",
+                data: { account: account, password: password },
+                success: function (data) {
+                    if (data.Result==1) {
+                        window.location.href = "/Home/index";
+                    }
+                    else if (data.Result == 2) {
+                        window.location.href = "/Home/Admin";
+                    }
+                    else {
+                        alert(data.ErrorDesc);
+                    }
+                }
+            });
+            return false;
+        })
+
+    </script>
+</body>
+</html>          

@@ -1,0 +1,71 @@
+﻿<div class="admin-content">
+    <form id="form" class="am-form am-form-horizontal">
+        <div class="admin-content-body">
+            <div class="am-margin">
+                <div class="am-g am-margin-top">
+                    <div class="am-u-md-3 am-text-right">
+                        商品：
+                    </div>
+                    <div class="am-u-md-5 am-text-left">
+                        <button style="width:28%;margin-left:3%" type="button" class="am-btn am-btn-primary" onclick="LoadProduct()">选择商品</button>
+                    </div>
+                    <div class="am-hide-sm-only am-u-md-4 am-text-left"></div>
+                </div>
+                <div id="selectProduct">
+                    <div class="am-g am-margin-top">
+                        <input type="hidden" name="Sku" />
+                        <div class="am-u-md-3 am-text-right">
+                            商品名：
+                        </div>
+                        <div class="am-u-md-3 am-text-left">
+                            <input type="text" name="ProductName" class="am-input-sm" readonly />
+                        </div>
+                        <div class="am-u-md-1 am-text-right">
+                            数量：
+                        </div>
+                        <div class="am-u-md-1 am-text-left am-u-end">
+                            <input type="number" name="Count" class="am-input-sm" />
+                        </div>
+                    </div>
+                </div>
+                <hr />
+                <div class="am-g am-margin-top">
+                    <div class="am-u-md-3 am-text-right">
+                        店铺：
+                    </div>
+                    <div class="am-u-md-5">
+                        <select name="shop">
+                            <option value="2">K米</option>
+                            <option value="3">途瑞思</option>
+                            <option value="1" selected="selected">12580</option>
+                            
+                        </select>
+                    </div>
+                    <div class="am-hide-sm-only am-u-md-4 am-text-left"><strong class="am-text-danger am-text-sm">*</strong></div>
+                </div>
+            </div>
+                <div class="am-g am-margin-top">
+                    <div class="am-u-md-3 am-text-right">
+                        商城订单号：
+                    </div>
+                    <div class="am-u-md-5">
+                        <input type="text" name="thirdOrder" class="am-input-sm" maxlength="32" placeholder="请输入商城订单号">
+                    </div>
+                    <div class="am-hide-sm-only am-u-md-4 am-text-left"><strong class="am-text-danger am-text-sm">*</strong>必填，不能超过32个字符</div>
+                </div>   
+                <div class="am-g am-margin-top">
+                    <div class="am-u-md-3 am-text-right">
+                        发票方式：
+                    </div>
+                    <div class="am-u-md-5">
+                        <select name="invoiceType">
+                            <option value="1">普通发票</option>
+                            <option value="2" selected="selected">增值税发票</option> 
+                        </select>
+                    </div>
+                    <div class="am-hide-sm-only am-u-md-4 am-text-left"><strong class="am-text-danger am-text-sm">*</strong></div>
+                </div>                        
+            </div>
+        </div>
+    </form>
+</div>

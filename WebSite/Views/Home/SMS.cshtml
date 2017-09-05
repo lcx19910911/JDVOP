@@ -1,0 +1,123 @@
+﻿@{
+    ViewBag.Title = "商品";
+}
+
+<div class="am-cf am-padding">
+    <div class="am-fl am-cf"><a href="/"><strong class="am-text-primary am-text-lg">首页</strong></a> /<small>商品</small></div>
+</div>
+<div id="searchDomain">
+
+    <div class="am-g">
+        <div class="am-u-lg-12">
+            <div class="am-input-group am-input-group-sm">
+                <span class="am-input-group-label">批次</span>
+                <input type="text" class="am-form-field" placeholder="按批次搜索" name="no" ;>
+
+                <span class="am-input-group-btn am-margin-left-sm">
+                    <button class="am-btn am-btn-default" id="btnSearch" type="button">搜索</button>
+                    <button class="am-btn am-btn-default" onclick="ClearFilter()" type="button">清除</button>
+                </span>
+            </div>
+        </div>
+    </div>  
+    <div class="am-g am-margin-top-sm">
+        <div class="am-u-lg-6">
+            <div class="am-btn-toolbar">
+                <div class="am-btn-group am-btn-group-xs">
+                    <button class="am-btn am-btn-default" id="addBtn" type="button">新增</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="grid_container">
+    <table id="dataTable" class="am-table am-table-striped am-table-hover table-main">
+        <thead>
+            <tr>
+                <th dataname="ID" type="checkbox"></th>
+                <th dataname="BatchNum">批次</th>
+                <th dataname="SkipNum">开始节点</th>
+                <th dataname="SendCount">发送数量</th>
+                <th dataname="SuccessCount">成功数量</th>
+                <th dataname="StartUserID">开始用户id</th>
+                <th dataname="EndUserID">结束用户id</th>
+                <th dataname="CreatedTime" datatype="jsondate">创建时间</th>
+                <th type="eventlist"></th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
+@section scripts
+{
+
+    <script type="text/javascript">
+
+
+        function ClearFilter() {
+            $("#searchDomain input").val("");
+            $('#searchDomain select').each(function () {
+                $(this).find('option').eq(0).attr('selected', true);
+            })
+        }
+        
+        $("#addBtn").click(function () {
+
+            $.Nuoya.ajaxDialog({
+                ajaxUrl: "/HtmlTemplates/SMS/CreateSMS.html?" + Math.random(),
+                title: "发送短信",
+                width: ($(window).width() - 200) + "px",
+                height: ($(window).height() - 200) + "px",
+                callback: function (e) {
+                },
+                buttons: [{
+                    label: "保存",
+                    callback: function (e) {
+                        if ($("[name='SkipNum']").val() == "" || parseInt($("[name='SkipNum']").val())<0)
+                        {
+                            $.Nuoya.alert("请输入正确的发送开始数");
+                            return false;
+                        }
+                        if ($("[name='SendCount']").val() == "" || parseInt($("[name='SendCount']").val()) < 0) {
+                            $.Nuoya.alert("请输入正确的发送数");
+                            return false;
+                        }
+                        if ($("[name='Content']").val() == "") {
+                            $.Nuoya.alert("请输入文本内容");
+                            return false;
+                        }
+
+                        $("#loadingDiv").show();
+                        $.Nuoya.form("form").ajaxSubmit({
+                            ajaxUrl: "/Home/AddSMSBatch",
+                            callback: function (data) {
+                                if (data.Result.Success) {
+                                    e.hide();
+                                    grid.reload();
+                                    $("#loadingDiv").hide();
+                                }
+                                else
+                                    $.Nuoya.alert(data.Result.Msg);
+                            }
+                        });
+                    }
+                }]
+            });
+        });
+
+        var grid = $.Nuoya.grid({
+            tableId: "dataTable",
+            //表格id
+            search: {
+                domainId: "searchDomain",
+                subId: "btnSearch"
+            },
+            ajaxUrl: "/Home/GetSMSPageList",
+            //数据请求地址
+            pageSize: 10,
+            events: [
+            ]
+        });
+    </script>
+}
