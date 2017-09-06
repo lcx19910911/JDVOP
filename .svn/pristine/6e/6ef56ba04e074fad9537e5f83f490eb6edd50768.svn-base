@@ -270,7 +270,6 @@ namespace Webservice
                 var contentDic = Cache_Get_CategoryInfoList().Where(x => longList.Contains(x.catId)).Distinct().ToDictionary(x => x.catId.ToString());
                 list.ForEach(x =>
                 {
-                    x.url = "https://item.m.jd.com/product/" + x.sku + ".html";
                     x.stateStr = x.state.GetDescription();
                     if (x.category.IsNotNullOrEmpty())
                     {

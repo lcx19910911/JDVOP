@@ -489,7 +489,7 @@ namespace Webservice
 
         string connectStr = "data source=kmi.ppjd.cn;user id=CMCC_12580_sql;password=dfqm@201608sql;database=CMCC_12580";
 
-        string KMIconnectStr = "data source=kmi.ppjd.cn;user id=KMI_sql;password=dfqm@2016sql;database=KMI";
+        string KMIconnectStr = "data source=kmi.ppjd.cn;user id=KMI_sql;password=dfqm@201608sql;database=KMI";
         string jdvopConnectStr = "data source=kmi.ppjd.cn;user id=CMCC_12580_sql;password=dfqm@201608sql;database=jdvop";
 
         public void UpdateProductStock()
