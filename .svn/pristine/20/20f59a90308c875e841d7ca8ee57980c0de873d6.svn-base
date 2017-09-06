@@ -601,8 +601,6 @@ namespace Webservice
                         con.Open();
                         //4小时以上才更新
                         var dic = GetListResult<KeyValue>("select sku as [Value] from ProductInfo where (FreshDate is null or datediff(HOUR,FreshDate,getdate())>=4);", con);
-                        //var dic = GetListResult<KeyValue>("select sku as [Value] from ProductInfo where (sku=2770504);", con);
-
                         var index = 0;
                         var cmccIdSkuList = dic.Select(x => x.Value).ToList();
                         var selectList = cmccIdSkuList.Skip(index).Take(100).ToList();
@@ -651,18 +649,13 @@ namespace Webservice
                                             decimal spec_price = decimal.Parse(str_spec_price);
                                             jdPrice = Math.Min(jdPrice, spec_price);
                                         }
-
-                                        sb.AppendFormat("update ProductInfo set price={0},JDprice={1},state={2},FreshDate=getdate() where sku={3};\r\n", price, jdPrice, state, x);
                                     }
                                     catch
                                     {
-                                        
+
                                     }
-                                }else
-                                {
-                                    sb.AppendFormat("update ProductInfo set price={0},JDprice={1},state={2},FreshDate=getdate() where sku={3};\r\n", price, jdPrice, state, x);
                                 }
-                                
+                                sb.AppendFormat("update ProductInfo set price={0},JDprice={1},state={2},FreshDate=getdate() where sku={3};\r\n", price, jdPrice, state, x);
 
                             });
                             index++;

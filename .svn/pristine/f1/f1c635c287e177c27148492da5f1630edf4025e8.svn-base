@@ -107,7 +107,7 @@ namespace Webservice
                 var skuNumList = list.Select(x => new SkuNum() { num = 1, skuId = x.sku }).ToList();
 
                 //var stockListResult = service.CheckStockForOne(skuNumList, 16, 1303, 48713, 48746);
-                var stateListResult = service.CheckProductCanSale(list.Select(x => x.sku).ToList());
+                var stateListResult = service.CheckProductCanSale(list.Select(x=>x.sku).ToList());
 
                 var skuIdList = list.Select(x => x.sku).ToList();
                 var priceListResult = service.QueryProductPrice(skuIdList);
@@ -122,86 +122,81 @@ namespace Webservice
 
                 list.ForEach(x =>
                 {
-                    if (x.FreshDate < DateTime.Now.AddHours(-4))
+                    var product = service.FindProductDetial(x.sku)?.result;
+
+                    if (product != null && !string.IsNullOrEmpty(product.name))
                     {
-                        var product = service.FindProductDetial(x.sku)?.result;
+                        x.name = product?.name;
+                    }
 
-                        if (product != null && !string.IsNullOrEmpty(product.name))
+
+                    //var obj = stockListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
+                    //if (obj != null)
+                    //{
+                    //    if (obj.stockStateld == StockState.HaveAndForDeliver || obj.stockStateld == StockState.HaveAndPayForFromStock || obj.stockStateld == StockState.HaveAndWaitArriveForDeliver || obj.stockStateDesc == "有货")
+                    //    {
+                    //        x.stock = 10;
+                    //        x.state = ProductStateEnum.OnSale;
+                    //    }
+                    //    else if (obj.stockStateDesc == "无货")
+                    //    {
+                    //        x.stock = 0;
+                    //        x.state = ProductStateEnum.OffSale;
+                    //    }
+                    //}
+
+                    var stateObj = stateListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
+      
+                    if (stateObj != null)
+                    {
+                        x.state =(ProductStateEnum) stateObj.saleState.GetInt();
+                    }
+
+                    var priceObj = priceListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
+                    if (priceObj != null)
+                    {
+                        x.JDprice = priceObj.jdPrice;
+                        x.price = priceObj.price;
+                    }
+
+                    try
+                    {
+                        if (x.state == ProductStateEnum.OnSale)
                         {
-                            x.name = product?.name;
-                        }
+                            //手机端 京东售价/京东秒杀
+                            string result = WebHelper.GetPage("https://item.m.jd.com/product/" + x.sku + ".html");
 
-
-                        //var obj = stockListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
-                        //if (obj != null)
-                        //{
-                        //    if (obj.stockStateld == StockState.HaveAndForDeliver || obj.stockStateld == StockState.HaveAndPayForFromStock || obj.stockStateld == StockState.HaveAndWaitArriveForDeliver || obj.stockStateDesc == "有货")
-                        //    {
-                        //        x.stock = 10;
-                        //        x.state = ProductStateEnum.OnSale;
-                        //    }
-                        //    else if (obj.stockStateDesc == "无货")
-                        //    {
-                        //        x.stock = 0;
-                        //        x.state = ProductStateEnum.OffSale;
-                        //    }
-                        //}
-
-
-                        var stateObj = stateListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
-
-                        if (stateObj != null)
-                        {
-                            x.state = (ProductStateEnum)stateObj.saleState.GetInt();
-                        }
-
-                        var priceObj = priceListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
-                        if (priceObj != null)
-                        {
-                            x.JDprice = priceObj.jdPrice;
-                            x.price = priceObj.price;
-                        }
-
-                        try
-                        {
-                            if (x.state == ProductStateEnum.OnSale)
+                            //秒杀价
+                            string pattern = "<span id=\"spec_price\">(.+?)</span>";
+                            Match m = Regex.Match(result, pattern, RegexOptions.IgnoreCase);
+                            if (m.Success)
                             {
-                                //手机端 京东售价/京东秒杀
-                                string result = WebHelper.GetPage("https://item.m.jd.com/product/" + x.sku + ".html");
-
-                                //秒杀价
-                                string pattern = "<span id=\"spec_price\">(.+?)</span>";
-                                Match m = Regex.Match(result, pattern, RegexOptions.IgnoreCase);
-                                if (m.Success)
-                                {
-                                    string str_spec_price = m.Groups[1].Value.Trim();
-                                    decimal spec_price = decimal.Parse(str_spec_price);
-                                    x.JDprice = Math.Min(x.JDprice, spec_price);
-                                }
+                                string str_spec_price = m.Groups[1].Value.Trim();
+                                decimal spec_price = decimal.Parse(str_spec_price);
+                                x.JDprice = Math.Min(x.JDprice, spec_price);
                             }
-                        }
-                        catch
-                        {
-
-                        }
-
-                        x.stateStr = x.state.GetDescription();
-                        if (x.category.IsNotNullOrEmpty())
-                        {
-                            var nameList = new List<string>();
-                            foreach (var item in x.category.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
-                            {
-                                if (item.IsNotNullOrEmpty() && contentDic.ContainsKey(item))
-                                {
-                                    nameList.Add(contentDic[item].name);
-                                }
-                            }
-
-                            x.categoryStr = string.Join(",", nameList);
                         }
                     }
-                });
+                    catch
+                    {
 
+                    }
+
+                    x.stateStr = x.state.GetDescription();
+                    if (x.category.IsNotNullOrEmpty())
+                    {
+                        var nameList = new List<string>();
+                        foreach (var item in x.category.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            if (item.IsNotNullOrEmpty() && contentDic.ContainsKey(item))
+                            {
+                                nameList.Add(contentDic[item].name);
+                            }
+                        }
+
+                        x.categoryStr = string.Join(",", nameList);
+                    }
+                });
                 entities.SaveChanges();
                 return ResultPageList(list, pageIndex, pageSize, count);
             }
@@ -253,7 +248,7 @@ namespace Webservice
             using (DbRepository entities = new DbRepository())
             {
                 var query = GetProductQuery(entities, name, sku, brandName, firstCategory, secondCategory, thirdCategory, state);
-                var list = query.OrderBy(x => x.brandName).ThenBy(x => x.category).ToList();
+                var list = query.OrderBy(x=>x.brandName).ThenBy(x=>x.category).ToList();
 
                 var longList = new List<long>();
                 list.Select(x => x.category).Distinct().ToList().ForEach(x =>
@@ -591,7 +586,7 @@ namespace Webservice
             try
             {
                 MallInterface service = new JDMallService();
-
+               
                 using (var db = new DbRepository())
                 {
                     #region 刷新商品数据库数据
@@ -672,7 +667,7 @@ namespace Webservice
                             ExecuteNonQuer(sb.ToString(), con);
                             sb = new StringBuilder();
                         }
-
+                        
                     }
 
                     #endregion
