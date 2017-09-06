@@ -210,6 +210,7 @@ namespace JDVOP.Dto
 
         public int CommentCount { get; set; }
 
+        public DateTime? FreshDate { get; set; }
     }
 
     /// <summary>
