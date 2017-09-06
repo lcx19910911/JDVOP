@@ -11,9 +11,6 @@ using JDVOP.Dto;
 using JDVOP.Extensions;
 using Webservice;
 using Entity;
-using Core;
-using System.Collections;
-using System.IO;
 
 namespace WebSite.Controllers
 {
@@ -64,37 +61,6 @@ namespace WebSite.Controllers
         {
             return JResult(service.Get_ProjectPageList(pageIndex, pageSize, name, sku, brandName, firstCategory, secondCategory, thirdCategory, state));
         }
-
-        public ActionResult GetExecle(string name, long? sku, string brandName, string firstCategory, string secondCategory, string thirdCategory, ProductStateEnum? state)
-        {
-            var list=service.GetExecleList(name, sku, brandName, firstCategory, secondCategory, thirdCategory, state);
-
-            string fileName = DateTime.Now.ToString("yyyyMMddhhmmss") + ".xls";
-            string filePath = Path.Combine(Server.MapPath("~/") + @"Export\" );
-            if (!Directory.Exists(filePath))
-            {
-                Directory.CreateDirectory(filePath);
-            }
-            filePath +=  fileName;
-            NPOIHelper<ProductInfo>.GetExcel(list, GetHT(), filePath);
-            //Directory.Delete(filePath);
-            return File(filePath, "application/vnd.ms-excel", fileName);
-        }
-
-        private Dictionary<string, string> GetHT()
-        {
-            Dictionary<string,string> hs = new Dictionary<string, string>();
-            hs["sku"] = "京东sku";
-            hs["name"] = "标题";
-            hs["categoryStr"] = "分类";
-            hs["stateStr"] = "上下架状态";
-            hs["brandName"] = "品牌";
-            hs["commentCount"] = "评论数";
-            hs["JDprice"] = "京东促销价";
-            hs["price"] = "成本价";
-            return hs;
-        }
-
         /// <summary>
         /// 获取分页列表
         /// </summary>

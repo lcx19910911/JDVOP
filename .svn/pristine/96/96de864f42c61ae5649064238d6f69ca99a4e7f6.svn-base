@@ -48,11 +48,10 @@
             <div class="am-btn-toolbar">
                 <div class="am-btn-group am-btn-group-xs">
                     <button class="am-btn am-btn-default" id="refreshSearch" type="button">更新12580库存</button>
-                    <button class="am-btn am-btn-success" id="refreshProductState" type="button">更新本地上下架和价格</button>
-                    <button class="am-btn am-btn-warning am-margin-left-sm" id="getProduct" type="button">获取12580京东商品库</button>
-                    <button class="am-btn am-btn-danger am-margin-left-sm" id="syncProduct" type="button">同步京东产品</button>
-                    <button class="am-btn am-btn-success am-margin-left-sm" id="queryBalance" type="button">查询余额</button>
-                    <button class="am-btn am-btn-warning  am-margin-left-sm" id="getExecle" type="button">导出execle</button>
+                    <button class="am-btn am-btn-default" id="refreshProductState" type="button">更新本地上下架和价格</button>
+                    <button class="am-btn am-btn-default am-margin-left-sm" id="getProduct" type="button">获取12580京东商品库</button>
+                    <button class="am-btn am-btn-default am-margin-left-sm" id="syncProduct" type="button">同步京东产品</button>
+                    <button class="am-btn am-btn-defaultam-margin-left-sm" id="queryBalance" type="button">查询余额</button>
                 </div>
             </div>
         </div>
@@ -140,18 +139,6 @@
                 $("#loadingDiv").hide();
             });
         })
-        $("#getExecle").click(function () {
-
-            window.open("/home/GetExecle?name=" + $("[name='name']").val()
-                + "&sku=" + $("[name='sku']").val()
-                + "&brandName=" + $("[name='brandName']").val()
-                + "&state=" + $("[name='state']").val()
-                + "&firstCategory=" + $("[name='firstCategory']").val()
-                + "&secondCategory=" + $("[name='secondCategory']").val()
-                + "&thirdCategory=" + $("[name='thirdCategory']").val()
-                )
-        })
-        
 
         $("#refreshProductState").click(function () {
             $("#loadingDiv").show();

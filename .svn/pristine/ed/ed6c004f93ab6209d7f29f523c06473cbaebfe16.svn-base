@@ -14,7 +14,6 @@ using System.Data.Entity;
 using System.Data.SqlClient;
 using System.Linq;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
 
@@ -106,9 +105,7 @@ namespace Webservice
                 var contentDic = Cache_Get_CategoryInfoList().Where(x => longList.Contains(x.catId)).Distinct().ToDictionary(x => x.catId.ToString());
                 var skuNumList = list.Select(x => new SkuNum() { num = 1, skuId = x.sku }).ToList();
 
-                //var stockListResult = service.CheckStockForOne(skuNumList, 16, 1303, 48713, 48746);
-                var stateListResult = service.CheckProductCanSale(list.Select(x=>x.sku).ToList());
-
+                var stockListResult = service.CheckStockForOne(skuNumList, 16, 1303, 48713, 48746);
                 var skuIdList = list.Select(x => x.sku).ToList();
                 var priceListResult = service.QueryProductPrice(skuIdList);
                 //while (!stockListResult.success)
@@ -128,28 +125,19 @@ namespace Webservice
                     {
                         x.name = product?.name;
                     }
-
-
-                    //var obj = stockListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
-                    //if (obj != null)
-                    //{
-                    //    if (obj.stockStateld == StockState.HaveAndForDeliver || obj.stockStateld == StockState.HaveAndPayForFromStock || obj.stockStateld == StockState.HaveAndWaitArriveForDeliver || obj.stockStateDesc == "有货")
-                    //    {
-                    //        x.stock = 10;
-                    //        x.state = ProductStateEnum.OnSale;
-                    //    }
-                    //    else if (obj.stockStateDesc == "无货")
-                    //    {
-                    //        x.stock = 0;
-                    //        x.state = ProductStateEnum.OffSale;
-                    //    }
-                    //}
-
-                    var stateObj = stateListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
-      
-                    if (stateObj != null)
+                    var obj = stockListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
+                    if (obj != null)
                     {
-                        x.state =(ProductStateEnum) stateObj.saleState.GetInt();
+                        if (obj.stockStateld == StockState.HaveAndForDeliver || obj.stockStateld == StockState.HaveAndPayForFromStock || obj.stockStateld == StockState.HaveAndWaitArriveForDeliver || obj.stockStateDesc == "有货")
+                        {
+                            x.stock = 10;
+                            x.state = ProductStateEnum.OnSale;
+                        }
+                        else if (obj.stockStateDesc == "无货")
+                        {
+                            x.stock = 0;
+                            x.state = ProductStateEnum.OffSale;
+                        }
                     }
 
                     var priceObj = priceListResult.result.Where(y => y.skuId == x.sku).FirstOrDefault();
@@ -157,29 +145,6 @@ namespace Webservice
                     {
                         x.JDprice = priceObj.jdPrice;
                         x.price = priceObj.price;
-                    }
-
-                    try
-                    {
-                        if (x.state == ProductStateEnum.OnSale)
-                        {
-                            //手机端 京东售价/京东秒杀
-                            string result = WebHelper.GetPage("https://item.m.jd.com/product/" + x.sku + ".html");
-
-                            //秒杀价
-                            string pattern = "<span id=\"spec_price\">(.+?)</span>";
-                            Match m = Regex.Match(result, pattern, RegexOptions.IgnoreCase);
-                            if (m.Success)
-                            {
-                                string str_spec_price = m.Groups[1].Value.Trim();
-                                decimal spec_price = decimal.Parse(str_spec_price);
-                                x.JDprice = Math.Min(x.JDprice, spec_price);
-                            }
-                        }
-                    }
-                    catch
-                    {
-
                     }
 
                     x.stateStr = x.state.GetDescription();
@@ -581,21 +546,18 @@ namespace Webservice
 
         public void UpdateProductStockAndPrice()
         {
-            StringBuilder sb = new StringBuilder();
-
             try
             {
                 MallInterface service = new JDMallService();
-               
+                StringBuilder sb = new StringBuilder();
                 using (var db = new DbRepository())
                 {
-                    #region 刷新商品数据库数据
+                    #region 刷新12306商品数据库数据
 
                     using (SqlConnection con = new SqlConnection(jdvopConnectStr))
                     {
                         con.Open();
-                        //4小时以上才更新
-                        var dic = GetListResult<KeyValue>("select sku as [Value] from ProductInfo where (FreshDate is null or datediff(HOUR,FreshDate,getdate())>=4);", con);
+                        var dic = GetListResult<KeyValue>("select sku as [Value] from ProductInfo where CMCCId!=0;", con);
                         var index = 0;
                         var cmccIdSkuList = dic.Select(x => x.Value).ToList();
                         var selectList = cmccIdSkuList.Skip(index).Take(100).ToList();
@@ -620,47 +582,20 @@ namespace Webservice
                                 var priceObj = priceListResult.result.Where(y => y.skuId == x).FirstOrDefault();
                                 if (stockObj != null)
                                 {
-                                    state = stockObj.saleState.GetInt();
+                                    state=stockObj.saleState.GetInt();
                                 }
                                 if (priceObj != null)
                                 {
                                     price = priceObj.price;
                                     jdPrice = priceObj.jdPrice;
                                 }
-
-                                if (state == 1)
-                                {
-                                    try
-                                    {
-                                        //手机端 京东售价/京东秒杀
-                                        string result = WebHelper.GetPage("https://item.m.jd.com/product/" + x + ".html");
-
-                                        //秒杀价
-                                        string pattern = "<span id=\"spec_price\">(.+?)</span>";
-                                        Match m = Regex.Match(result, pattern, RegexOptions.IgnoreCase);
-                                        if (m.Success)
-                                        {
-                                            string str_spec_price = m.Groups[1].Value.Trim();
-                                            decimal spec_price = decimal.Parse(str_spec_price);
-                                            jdPrice = Math.Min(jdPrice, spec_price);
-                                        }
-                                    }
-                                    catch
-                                    {
-
-                                    }
-                                }
-                                sb.AppendFormat("update ProductInfo set price={0},JDprice={1},state={2},FreshDate=getdate() where sku={3};\r\n", price, jdPrice, state, x);
+                                sb.AppendFormat("update ProductInfo set price={0},JDprice={1},state={2} where sku={3};\r\n", price, jdPrice, state, x);
 
                             });
                             index++;
                             selectList = cmccIdSkuList.Skip(index * 100).Take(100).ToList();
-
-                            //执行
-                            ExecuteNonQuer(sb.ToString(), con);
-                            sb = new StringBuilder();
                         }
-                        
+                        ExecuteNonQuer(sb.ToString(), con);
                     }
 
                     #endregion
@@ -668,6 +603,7 @@ namespace Webservice
             }
             catch (Exception ex)
             {
+
                 throw ex;
             }
         }
