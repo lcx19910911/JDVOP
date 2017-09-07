@@ -20,9 +20,11 @@ using System.Web;
 
 namespace Webservice
 {
-    public partial class ProjectService
+    public partial class ProjectService :BaseService
     {
         MallInterface service = new JDMallService();
+        CategoryService categoryService = new CategoryService();
+
         string projectKey = "jd_project";
         /// <summary>
         /// 用户登录
@@ -54,25 +56,7 @@ namespace Webservice
                 }
             }
         }
-
-        string departmentKey = CacheHelper.RenderKey("11", "Department");
-
-        /// <summary>
-        /// 全局缓存
-        /// </summary>
-        /// <returns></returns>
-        private List<CategoryInfo> Cache_Get_CategoryInfoList()
-        {
-
-            return CacheHelper.Get<List<CategoryInfo>>(departmentKey, () =>
-            {
-                using (var db = new DbRepository())
-                {
-                    List<CategoryInfo> list = db.CategoryInfo.ToList();
-                    return list;
-                }
-            });
-        }
+        
 
 
         /// <summary>
@@ -85,6 +69,7 @@ namespace Webservice
         /// <returns></returns>
         public ResultPageList<ProductInfo> Get_ProjectPageList(int pageIndex, int pageSize, string name, long? sku, string brandName, string firstCategory, string secondCategory, string thirdCategory, ProductStateEnum? state)
         {
+            CategoryService categoryService = new CategoryService();
             using (DbRepository entities = new DbRepository())
             {
                 var query = GetProductQuery(entities, name, sku, brandName, firstCategory, secondCategory, thirdCategory, state);
@@ -103,7 +88,7 @@ namespace Webservice
                         }
                     }
                 });
-                var contentDic = Cache_Get_CategoryInfoList().Where(x => longList.Contains(x.catId)).Distinct().ToDictionary(x => x.catId.ToString());
+                var contentDic = categoryService.Cache_Get_CategoryInfoList().Where(x => longList.Contains(x.catId)).Distinct().ToDictionary(x => x.catId.ToString());
                 var skuNumList = list.Select(x => new SkuNum() { num = 1, skuId = x.sku }).ToList();
 
                 //var stockListResult = service.CheckStockForOne(skuNumList, 16, 1303, 48713, 48746);
@@ -207,7 +192,18 @@ namespace Webservice
             }
         }
 
-
+        /// <summary>
+        /// 获取搜索query
+        /// </summary>
+        /// <param name="entities"></param>
+        /// <param name="name"></param>
+        /// <param name="sku"></param>
+        /// <param name="brandName"></param>
+        /// <param name="firstCategory"></param>
+        /// <param name="secondCategory"></param>
+        /// <param name="thirdCategory"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
         public IQueryable<ProductInfo> GetProductQuery(DbRepository entities, string name, long? sku, string brandName, string firstCategory, string secondCategory, string thirdCategory, ProductStateEnum? state)
         {
             var query = entities.ProductInfo.AsQueryable();
@@ -247,7 +243,17 @@ namespace Webservice
             return query;
         }
 
-
+        /// <summary>
+        /// 获取导出excle的集合
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="sku"></param>
+        /// <param name="brandName"></param>
+        /// <param name="firstCategory"></param>
+        /// <param name="secondCategory"></param>
+        /// <param name="thirdCategory"></param>
+        /// <param name="state"></param>
+        /// <returns></returns>
         public List<ProductInfo> GetExecleList(string name, long? sku, string brandName, string firstCategory, string secondCategory, string thirdCategory, ProductStateEnum? state)
         {
             using (DbRepository entities = new DbRepository())
@@ -267,7 +273,7 @@ namespace Webservice
                         }
                     }
                 });
-                var contentDic = Cache_Get_CategoryInfoList().Where(x => longList.Contains(x.catId)).Distinct().ToDictionary(x => x.catId.ToString());
+                var contentDic = categoryService.Cache_Get_CategoryInfoList().Where(x => longList.Contains(x.catId)).Distinct().ToDictionary(x => x.catId.ToString());
                 list.ForEach(x =>
                 {
                     x.url = "https://item.m.jd.com/product/" + x.sku + ".html";
@@ -293,205 +299,8 @@ namespace Webservice
 
 
         /// <summary>
-        /// 获取分页列表
+        /// 修改产品库存
         /// </summary>
-        /// <param name="pageIndex">页码</param>
-        /// <param name="pageSize">分页大小</param>
-        /// <param name="name">名称 - 搜索项</param>
-        /// <param name="no">编号 - 搜索项</param>
-        /// <returns></returns>
-        public ResultPageList<JDOrderDto> GetOrderPageList(int pageIndex, int pageSize, string cmccOrderId,
-            DateTime? createdTimeStart, DateTime? createdTimeEnd)
-        {
-            using (DbRepository db = new DbRepository())
-            {
-                var query = db.JDOrderInfo.AsQueryable().AsNoTracking();
-                if (cmccOrderId.IsNotNullOrEmpty())
-                {
-                    query = query.Where(x => x.CMCCOrderId.Contains(cmccOrderId));
-                }
-                if (createdTimeStart != null)
-                {
-                    query = query.Where(x => x.CreateTime >= createdTimeStart);
-                }
-                if (createdTimeEnd != null)
-                {
-                    createdTimeEnd = createdTimeEnd.Value.AddDays(1);
-                    query = query.Where(x => x.CreateTime < createdTimeEnd);
-                }
-                var count = query.Count();
-                var list = query.OrderByDescending(x => x.CMCCOrderId).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
-                list.ForEach(x =>
-                {
-                    x.StateStr = x.State.GetDescription();
-                });
-                return ResultPageList(list, pageIndex, pageSize, count);
-            }
-        }
-
-        /// <summary>
-        /// 获取地区数据
-        /// </summary>
-        /// <param name="value">地区编码</param>
-        /// <returns></returns>
-        public string Get_AreaList()
-        {
-
-            return new JDMallIBLL().QueryArea().Result;
-        }
-
-
-        /// <summary>
-        /// 获取地区数据
-        /// </summary>
-        /// <param name="value">地区编码</param>
-        /// <returns></returns>
-        public List<SelectItem> Get_AreaList(string value)
-        {
-            var areaList = CacheHelper.Get<List<SelectItem>>("jd_area_list", CacheTimeOption.HalfDay, () =>
-            {
-                using (SqlConnection con = new SqlConnection(connectStr))
-                {
-                    con.Open();
-                    return GetList("select id as Value,name as Text  from  [JD_area]", con);
-                }
-            });
-
-            var areas = areaList.AsQueryable();
-            if (!string.IsNullOrEmpty(value) && !value.Equals("0"))
-                areas = areas.Where(x => !string.IsNullOrEmpty(x.ParentKey) && x.ParentKey.Trim().Equals(value));
-            else
-                areas = areas.Where(_ => string.IsNullOrEmpty(_.ParentKey));
-
-            return areas.ToList();
-        }
-
-        /// <summary>
-        /// 获取选择项
-        /// </summary>
-        /// <param name="enteredPointFlag">角色flag值</param>
-        /// <returns></returns>
-        public List<Tuple<long, string>> Get_CategorySelectItem(long parentId)
-        {
-            using (var db = new DbRepository())
-            {
-                var list = new List<CategoryInfo>() { new CategoryInfo { catId = -1, name = "请选择" } };
-                if (parentId != 0)
-                    list.AddRange(Cache_Get_CategoryInfoList().Where(x => x.parentId.Equals(parentId)).ToList());
-                else
-                {
-                    list.AddRange(Cache_Get_CategoryInfoList().Where(x => x.catClass == CategoryClass.One).ToList());
-
-                }
-                return list.Select(x => new Tuple<long, string>(x.catId, x.name)).ToList();
-
-            }
-        }
-
-        public WebResult<bool> CreateOrder(EnumShop shop, string thirdOrder, List<SkuNum> nums, int province, int city, int county, InvoiceType invoiceType, int town = 0)
-        {
-
-            string e_connectStr = "";
-
-            if (shop == EnumShop.shop_12580)
-            {
-                e_connectStr = connectStr;
-            }
-            else if (shop == EnumShop.shop_KMI)
-            {
-                e_connectStr = KMIconnectStr;
-            }
-
-            using (SqlConnection con = new SqlConnection(e_connectStr))
-            {
-                con.Open();
-                var order = GetResult<OrderInfo>($"select  OrderId,OrderStatus,Address,CellPhone,EmailAddress,RegionId,Remark,TelPhone,ShipTo,ZipCode from Hishop_Orders where OrderId='{thirdOrder}'", con);
-                if (order == null)
-                {
-                    return Result(false, "商城订单不存在");
-                }
-                if (order.OrderStatus != OrderStatus.BuyerAlreadyPaid)
-                {
-                    return Result(false, "商城订单状态不是待发货状态不存在");
-                }
-
-                bool isComplete = false;
-                List<int> regionList = new List<int>();
-
-                int regionId = order.RegionId;
-                if (order.RegionId > 200000)
-                {
-                    regionId = order.RegionId - 200000;
-                }
-                else if (order.RegionId > 100000)
-                {
-                    regionId = order.RegionId - 100000;
-                }
-
-
-
-                while (!isComplete)
-                {
-                    var area = GetResult<JD_area>("select *  from  [JD_area] where id =" + regionId, con);
-
-                    if (area.parent_id == 0)
-                    {
-                        isComplete = true;
-                    }
-
-                    regionList.Insert(0, regionId);
-                    regionId = area.parent_id;
-
-                }
-                var list = regionList.ToList();
-
-                var result = new JDMallIBLL().CreateOrder(thirdOrder.ToString(), nums, order.ShipTo, order.CellPhone, order.Address, order.TelPhone, order.Remark, list[0], list[1], list[2], invoiceType, (list.Count == 4 ? list[3] : 0));
-                if (result.IsSuccess)
-                {
-                    using (var db = new DbRepository())
-                    {
-                        //var orderModel = service.QueryJDOrderInfo(thirdOrder).result;
-                        result.Result.ID = Guid.NewGuid().ToString("N");
-                        result.Result.CMCCOrderId = thirdOrder;
-                        result.Result.State = JDOrderState.New;
-                        result.Result.CreateTime = DateTime.Now;
-                        nums.ForEach(x =>
-                        {
-                            result.Result.DetailsJsonStr += "商品" + x.name + " 数量：" + x.num + ";\r\n";
-                        });
-                        db.JDOrderInfo.Add(result.Result);
-                        db.SaveChanges();
-                    }
-                }
-                return Result(result.IsSuccess, result.Msg);
-            }
-        }
-
-        public ResultPageList<T> ResultPageList<T>(List<T> model, int pageIndex, int pageSize, int recoredCount)
-        {
-            List<string> operateList = new List<string>();
-            return ConvertPageList<T>(model, pageIndex, pageSize, recoredCount);
-        }
-
-        /// <summary>
-        /// list转换pageList
-        /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="List">需要分页的数据</param>
-        /// <returns></returns>
-        private ResultPageList<T> ConvertPageList<T>(List<T> list, int pageIndex, int pageSize, int recoredCount)
-        {
-            pageIndex = pageIndex <= 0 ? 1 : pageIndex;
-            pageSize = pageSize <= 0 ? 10 : pageSize;
-            return new ResultPageList<T>(list, pageIndex, pageSize, recoredCount);
-        }
-
-
-        string connectStr = "data source=kmi.ppjd.cn;user id=CMCC_12580_sql;password=dfqm@201608sql;database=CMCC_12580";
-
-        string KMIconnectStr = "data source=kmi.ppjd.cn;user id=KMI_sql;password=dfqm@2016sql;database=KMI";
-        string jdvopConnectStr = "data source=kmi.ppjd.cn;user id=CMCC_12580_sql;password=dfqm@201608sql;database=jdvop";
-
         public void UpdateProductStock()
         {
             try
@@ -585,6 +394,9 @@ namespace Webservice
             }
         }
 
+        /// <summary>
+        /// 修改库存和价格
+        /// </summary>
         public void UpdateProductStockAndPrice()
         {
             StringBuilder sb = new StringBuilder();
@@ -685,6 +497,9 @@ namespace Webservice
             }
         }
 
+        /// <summary>
+        /// 
+        /// </summary>
         public void SyncProduct()
         {
             MallInterface service = new JDMallService();
@@ -844,6 +659,28 @@ namespace Webservice
         }
 
 
+
+        public string GetUpdateProduct(int productId, int stock)
+        {
+            if (productId != 0)
+            {
+                return $"update  Hishop_Products set  SaleStatus={ (stock > 0 ? 1 : 2)} where ProductId={productId};" +
+               $"update  Hishop_SKUs set  Stock={stock} where SkuId='{productId}_0';\r\n";
+            }
+            else
+                return "";
+        }
+        public string GetUpdateProduct(int productId, decimal jdPrice, decimal price, int stock)
+        {
+            if (productId != 0)
+            {
+                return $"update  Hishop_Products set MarketPrice={jdPrice},MinShowPrice={jdPrice},MaxShowPrice={jdPrice},SaleStatus={ (stock > 0 ? 1 : 2)} where ProductId={productId} and MinShowPrice>{jdPrice};" +
+                    $"update  Hishop_SKUs set SalePrice={jdPrice},BasicPrice={price},Stock={stock} where SkuId='{productId}_0' and SalePrice>{jdPrice};";
+            }
+            else
+                return "";
+        }
+
         public void GetProductFromPool()
         {
             try
@@ -983,7 +820,7 @@ namespace Webservice
                                     {
                                         ProductCode = product.sku.ToString(),
                                         Description = product.introduction,
-                                        CategoryName = GetCategoryName(category_dic, product.category),
+                                        CategoryName = categoryService.GetCategoryName(category_dic, product.category),
                                         AddedDate = DateTime.Now,
                                         ImageUrl1 = product.ImageUrl1,
                                         ImageUrl2 = product.ImageUrl2,
@@ -1032,17 +869,17 @@ namespace Webservice
             SqlParameter[] parameters = new SqlParameter[10];
             //分类
             var categryList = model.CategoryName.Split(';');
-            var firstCategory = GetCategory(categryList[0], 1, 0, con);
+            var firstCategory = categoryService.GetCategory(categryList[0], 1, 0, con);
             //第一级判断是否存在
             if (firstCategory != null)
             {
                 //第二级
-                var secondCategory = GetCategory(categryList[1], 2, firstCategory.Key, con);
+                var secondCategory = categoryService.GetCategory(categryList[1], 2, firstCategory.Key, con);
                 if (secondCategory != null)
                 {
                     if (categryList.Length == 3)
                     {
-                        var thirdCategoryResult = GetCategory(categryList[2], 3, secondCategory.Key, con);
+                        var thirdCategoryResult = categoryService.GetCategory(categryList[2], 3, secondCategory.Key, con);
                         if (thirdCategoryResult != null)
                         {
                             model.CategoryId = thirdCategoryResult.Key;
@@ -1143,34 +980,7 @@ namespace Webservice
             ExecuteNonQuer(skuSqlCommand, con);
         }
 
-
-        public KeyValue GetCategory(string name, int depth, int categoryId, SqlConnection con)
-        {
-            string categorySql = string.Empty;
-            if (depth == 1)
-            {
-                categorySql = $"SELECT CategoryId as [Key], [Name] as [Value] FROM [CMCC_12580].[dbo].[Hishop_Categories]   where name = '{name}' and depth=1;";
-            }
-            else
-            {
-                categorySql = $"SELECT CategoryId as [Key], [Name] as [Value] FROM [CMCC_12580].[dbo].[Hishop_Categories] where depth={depth} and ParentCategoryId={categoryId} and name='{name}';";
-            }
-            return GetResult<KeyValue>(categorySql, con);
-        }
-        public string GetCategoryName(Dictionary<long, CategoryInfo> category_dic, string categoryId)
-        {
-            if (categoryId.IsNullOrEmpty())
-                return "";
-            List<string> nameList = new List<string>();
-            categoryId.Split(';').ToList().ForEach(x =>
-            {
-                if (category_dic.ContainsKey(x.GetLong()))
-                {
-                    nameList.Add(category_dic[x.GetLong()].name);
-                }
-            });
-            return string.Join(";", nameList);
-        }
+        
         public void UpdateProductCommentCount()
         {
             StringBuilder sb = new StringBuilder();
@@ -1210,471 +1020,7 @@ namespace Webservice
                 #endregion
             }
         }
-
-        public List<KeyValue> GetListResult(string sqlcomand, SqlConnection con)
-        {
-            SqlCommand cmd = new SqlCommand(sqlcomand, con);
-
-            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-
-            DataSet ds = new DataSet();
-
-            adapter.Fill(ds);//填充数据
-
-            if (ds.Tables[0] != null)
-                return ModelConvertHelper<KeyValue>.ToModels(ds.Tables[0]) as List<KeyValue>;
-            else
-                return null;
-        }
-
-        public List<T> GetListResult<T>(string sqlcomand, SqlConnection con) where T : new()
-        {
-            SqlCommand cmd = new SqlCommand(sqlcomand, con);
-
-            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-
-            DataSet ds = new DataSet();
-
-            adapter.Fill(ds);//填充数据
-
-            if (ds.Tables[0] != null)
-                return ModelConvertHelper<T>.ToModels(ds.Tables[0]) as List<T>;
-            else
-                return null;
-        }
-
-        public List<SelectItem> GetList(string sqlcomand, SqlConnection con)
-        {
-            SqlCommand cmd = new SqlCommand(sqlcomand, con);
-
-            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-
-            DataSet ds = new DataSet();
-
-            adapter.Fill(ds);//填充数据
-
-            if (ds.Tables[0] != null)
-                return ModelConvertHelper<SelectItem>.ToModels(ds.Tables[0]) as List<SelectItem>;
-            else
-                return null;
-        }
-
-
-        public T GetResult<T>(string sqlcomand, SqlConnection conn) where T : new()
-        {
-            SqlCommand cmd = new SqlCommand(sqlcomand, conn);
-
-            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-
-            DataSet ds = new DataSet();
-
-            adapter.Fill(ds);//填充数据
-
-
-            if (ds.Tables[0].Rows.Count > 0)
-                return ModelConvertHelper<T>.ToModel(ds.Tables[0].Rows[0]);
-            else
-                return default(T);
-        }
-
-        public string GetUpdateProduct(int productId, int stock)
-        {
-            if (productId != 0)
-            {
-                return $"update  Hishop_Products set  SaleStatus={ (stock > 0 ? 1 : 2)} where ProductId={productId};" +
-               $"update  Hishop_SKUs set  Stock={stock} where SkuId='{productId}_0';\r\n";
-            }
-            else
-                return "";
-        }
-        public string GetUpdateProduct(int productId, decimal jdPrice, decimal price, int stock)
-        {
-            if (productId != 0)
-            {
-                return $"update  Hishop_Products set MarketPrice={jdPrice},MinShowPrice={jdPrice},MaxShowPrice={jdPrice},SaleStatus={ (stock > 0 ? 1 : 2)} where ProductId={productId} and MinShowPrice>{jdPrice};" +
-                    $"update  Hishop_SKUs set SalePrice={jdPrice},BasicPrice={price},Stock={stock} where SkuId='{productId}_0' and SalePrice>{jdPrice};";
-            }
-            else
-                return "";
-        }
-        public int ExecuteNonQuer(string sqlcomand, SqlConnection conn)
-        {
-            SqlCommand cmd = new SqlCommand(sqlcomand, conn);
-            return cmd.ExecuteNonQuery();
-        }
-        public int ExecuteScalar(string sqlcomand, SqlConnection conn)
-        {
-            SqlCommand cmd = new SqlCommand(sqlcomand, conn);
-            return cmd.ExecuteScalar().GetInt();
-        }
-        public int ExecuteScalar(string sqlcomand, SqlConnection conn, SqlParameter[] cmdParms)
-        {
-            SqlCommand cmd = new SqlCommand(sqlcomand, conn);
-            PrepareCommand(cmd, conn, null, sqlcomand, cmdParms);
-            object obj = cmd.ExecuteScalar();
-            cmd.Parameters.Clear();
-            return obj.GetInt();
-        }
-
-        private static void PrepareCommand(SqlCommand cmd, SqlConnection conn, SqlTransaction trans, string cmdText, SqlParameter[] cmdParms)
-        {
-            if (conn.State != ConnectionState.Open)
-                conn.Open();
-            cmd.Connection = conn;
-            cmd.CommandText = cmdText;
-            if (trans != null)
-                cmd.Transaction = trans;
-            cmd.CommandType = CommandType.Text;
-            if (cmdParms != null)
-            {
-                foreach (SqlParameter parameter in cmdParms)
-                {
-                    if ((parameter.Direction == ParameterDirection.InputOutput || parameter.Direction == ParameterDirection.Input) && (parameter.Value == null))
-                    {
-                        parameter.Value = DBNull.Value;
-                    }
-                    cmd.Parameters.Add(parameter);
-                }
-            }
-        }
-
-        public WebResult<T> Result<T>(T model)
-        {
-            return new WebResult<T> { Result = model };
-        }
-        public WebResult<T> Result<T>(T model, string msg)
-        {
-            return new WebResult<T> { Result = model, Msg = msg };
-        }
-
-        /// <summary>
-        /// 获取分页列表
-        /// </summary>
-        /// <param name="pageIndex">页码</param>
-        /// <param name="pageSize">分页大小</param>
-        /// <param name="name">名称 - 搜索项</param>
-        /// <param name="no">编号 - 搜索项</param>
-        /// <returns></returns>
-        public ResultPageList<SMSBatch> GetSMSPageList(int pageIndex, int pageSize, DateTime? createdTimeStart, DateTime? createdTimeEnd)
-        {
-            using (DbRepository db = new DbRepository())
-            {
-                var query = db.SMSBatch.AsQueryable();
-                if (createdTimeStart != null)
-                {
-                    query = query.Where(x => x.CreatedTime >= createdTimeStart);
-                }
-                if (createdTimeEnd != null)
-                {
-                    createdTimeEnd = createdTimeEnd.Value.AddDays(1);
-                    query = query.Where(x => x.CreatedTime < createdTimeEnd);
-                }
-                var count = query.Count();
-                var list = query.OrderByDescending(x => x.CreatedTime).Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
-                list.ForEach(x =>
-                {
-                    using (SqlConnection coon = new SqlConnection(connectStr))
-                    {
-                        if (x.SuccessCount == 0)
-                        {
-                            x.SuccessCount = GetSMSResult(x.BatchNum, coon);
-                        }
-                    }
-                });
-                db.SaveChanges();
-                return ResultPageList(list, pageIndex, pageSize, count);
-            }
-        }
-
-        public int GetSMSResult(string batchNum, SqlConnection coon)
-        {
-            coon.Open();
-            var sql = $"SELECT COUNT(1) FROM [CMCC_12580].[dbo].[CMCC_SMS_do] where state = 1 and batchNum = '{batchNum}' ; ";
-            return ExecuteScalar(sql, coon);
-        }
-
-        /// <summary>
-        /// 增加
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        public WebResult<bool> Add_SMSBatch(SMSBatch model)
-        {
-            using (DbRepository db = new DbRepository())
-            {
-                model.ID = Guid.NewGuid().ToString("N");
-                model.CreatedTime = DateTime.Now;
-                model.BatchNum = DateTime.Now.ToString("yyyyMMddhhmmss");
-                using (SqlConnection coon = new SqlConnection(connectStr))
-                {
-                    coon.Open();
-
-                    //非12580会员
-                    //                    var sql = $" SELECT TOP  {model.SendCount} memberid,mobile  ";
-                    //                    sql += @"FROM(
-                    //        SELECT ROW_NUMBER() OVER(ORDER BY memberid) AS RowNumber,memberid ,MoBileId as mobile FROM
-                    //          CMCC_Member_phone where MoBileId not in (select Mobile from[aspnet_12580Members]) and MoBileId not in (select Mobile from aspnet_free12580Member)
-                    //         )   as a
-                    //WHERE RowNumber >  " + model.SkipNum;
-
-                    //12580会员
-                    var sql = $" SELECT TOP  {model.SendCount} id,mobile  ";
-                    sql += @"FROM(
-        SELECT ROW_NUMBER() OVER(ORDER BY id) AS RowNumber,id ,mobile FROM
-          aspnet_All12580Member
-         )   as a
-WHERE RowNumber >  " + model.SkipNum;
-
-                    var idList = GetListResult<MemberPhone>(sql, coon);
-
-                    if (idList.Count > 0)
-                    {
-                        model.StartUserID = idList[0].memberId;
-                        model.EndUserID = idList[idList.Count - 1].memberId;
-                    }
-                    else
-                    {
-                        model.StartUserID = 0;
-                        model.EndUserID = 0;
-                    }
-
-
-
-                    var sequenceId = ExecuteScalar("select top 1 sequenceId FROM [CMCC_12580].[dbo].[CMCC_SMS_do] order by id desc", coon);
-                    if (model.AppendMibole.IsNotNullOrEmpty())
-                    {
-                        var sb = new StringBuilder();
-                        model.AppendMibole.Split(',').ToList().ForEach(x =>
-                        {
-                            sequenceId++;
-
-                            sb.Append($"INSERT INTO [CMCC_12580].[dbo].[CMCC_SMS_do]([sequenceId],[mobile],[message],[addtime],[state],[batchNum])VALUES({sequenceId},'{x}','{model.Content}','{DateTime.Now}',0,'{model.BatchNum}');\r\n");
-
-                        });
-
-                        if (sb.Length > 0)
-                        {
-                            ExecuteNonQuer(sb.ToString(), coon);
-                        }
-                    }
-
-                    if (idList != null && idList.Count > 0)
-                    {
-                        var sb = new StringBuilder();
-
-                        idList.ForEach(x =>
-                        {
-                            sequenceId++;
-                            sb.Append($"INSERT INTO [CMCC_12580].[dbo].[CMCC_SMS_do]([sequenceId],[mobile],[message],[addtime],[state],[batchNum])VALUES({sequenceId},'{x.mobile}','{model.Content}','{DateTime.Now}',0,'{model.BatchNum}');\r\n");
-
-                            if (sequenceId % 1000 == 0)
-                            {
-                                ExecuteNonQuer(sb.ToString(), coon);
-                                sb = new StringBuilder();
-                            }
-                        });
-
-                        if (sb.Length > 0)
-                        {
-                            ExecuteNonQuer(sb.ToString(), coon);
-                        }
-                    }
-
-
-
-                }
-
-                db.SMSBatch.Add(model);
-
-                if (db.SaveChanges() > 0)
-                {
-                    return Result(true);
-                }
-                else
-                {
-                    return Result(false);
-                }
-            }
-
-        }
-
-
-        /// <summary>
-        /// 查找实体
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public SMSBatch Find_SMSBatch(string id)
-        {
-            if (!id.IsNotNullOrEmpty())
-                return null;
-            using (DbRepository db = new DbRepository())
-            {
-                var model = db.SMSBatch.AsQueryable().AsNoTracking().FirstOrDefault(x => x.ID.Equals(id));
-                return model;
-            }
-        }
+       
     }
 
-    /// <summary>
-    /// 返回结果集
-    /// </summary>
-    /// <typeparam name="T"></typeparam>
-    public class WebResult<T>
-    {
-
-        /// <summary>
-        /// 返回结果
-        /// </summary>
-        public T Result { get; set; }
-
-        /// <summary>
-        /// 附加消息
-        /// </summary>
-        public string Msg { get; set; }
-
-
-        /// <summary>
-        /// 是否成功
-        /// </summary>
-        public bool Success
-        {
-            get { return Msg.IsNullOrEmpty(); }
-        }
-    }
-
-
-    /// <summary>
-    /// 选择项
-    /// </summary>
-    public class SelectItem
-    {
-
-        /// <summary>
-        /// 文本
-        /// </summary>
-        public string Text { get; set; }
-
-        /// <summary>
-        /// 值
-        /// </summary>
-        public string Value { get; set; }
-
-        /// <summary>
-        /// 是否选中
-        /// </summary>
-        public bool Selected { get; set; } = false;
-
-        public string ParentKey { get; set; }
-
-
-    }
-
-    public class JD_area
-    {
-        public int id { get; set; }
-
-        public string name { get; set; }
-        public int parent_id { get; set; }
-    }
-
-
-    public class Hishop_Products
-    {
-        public int Stock { get; set; }
-        public int ProductId { get; set; }
-
-        public int CategoryId { get; set; }
-        public string CategoryName { get; set; }
-        public string BrandName { get; set; }
-
-        public string ProductName { get; set; }
-
-        public string ProductCode { get; set; }
-
-        public string Description { get; set; }
-        /// <summary>
-        ///  3仓库中 2售罄 1在售
-        /// </summary>
-        public int SaleStatus { get; set; } = 3;
-
-        public DateTime AddedDate { get; set; }
-        public int VistiCounts { get; set; } = 0;
-        public int SaleCounts { get; set; } = 0;
-        public int ShowSaleCounts { get; set; } = 0;
-
-        public int DisplaySequence { get; set; }
-
-        public string ImageUrl1 { get; set; }
-        public string ImageUrl2 { get; set; }
-        public string ImageUrl3 { get; set; }
-        public string ImageUrl4 { get; set; }
-        public string ImageUrl5 { get; set; }
-        public string ThumbnailUrl40 { get; set; }
-        public string ThumbnailUrl60 { get; set; }
-        public string ThumbnailUrl100 { get; set; }
-        public string ThumbnailUrl160 { get; set; }
-        public string ThumbnailUrl180 { get; set; }
-
-        public string ThumbnailUrl220 { get; set; }
-        public string ThumbnailUrl310 { get; set; }
-        public string ThumbnailUrl410 { get; set; }
-
-        public decimal MarketPrice { get; set; }
-
-
-        public int BrandId { get; set; }
-
-
-        public int HasSKU { get; set; } = 0;
-        public int IsfreeShipping { get; set; } = 0;
-
-
-        public decimal MinShowPrice { get; set; }
-
-
-        public decimal MaxShowPrice { get; set; }
-
-        /// <summary>
-        /// 0包邮  4京东
-        /// </summary>
-        public int FreightTemplateId { get; set; } = 4;
-
-        public decimal FirstCommission { get; set; }
-
-        public decimal SecondCommission { get; set; }
-
-        public decimal ThirdCommission { get; set; }
-
-
-        public int IsSetCommission { get; set; } = 0;
-
-
-        public decimal CubicMeter { get; set; } = 0;
-
-        public decimal FreightWeight { get; set; } = 0;
-
-        public int SupplierID { get; set; } = 1;
-
-    }
-
-    public class MemberPhone
-    {
-        public int memberId { get; set; }
-        public string mobile { get; set; }
-    }
-    public class KeyValue
-    {
-        public int Key { get; set; }
-
-        public long Value { get; set; }
-        public int Num { get; set; }
-    }
-
-    public class Comment
-    {
-        public int CommentCount { get; set; }
-
-        public long SkuId { get; set; }
-    }
 }

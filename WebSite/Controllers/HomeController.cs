@@ -22,7 +22,11 @@ namespace WebSite.Controllers
     {
 
         ProjectService service = new ProjectService();
+        CategoryService categoryService = new CategoryService();
+        OrderService orderService = new OrderService();
+        AreaService areaService = new AreaService();
         MallInterface jdService = new JDMallService();
+        SMSService smsService = new SMSService();
         protected internal JsonResult JResult<T>(T model)
         {
             return Json(new
@@ -40,7 +44,7 @@ namespace WebSite.Controllers
 
         public ActionResult Index()
         {
-            return View(service.Get_CategorySelectItem(0));
+            return View(categoryService.Get_CategorySelectItem(0));
         }
 
         public ActionResult SMS()
@@ -107,7 +111,7 @@ namespace WebSite.Controllers
         public ActionResult GetOrderPageList(int pageIndex, int pageSize, string cmccOrderId,
             DateTime? createdTimeStart, DateTime? createdTimeEnd)
         {
-            return JResult(service.GetOrderPageList(pageIndex, pageSize, cmccOrderId, createdTimeStart, createdTimeEnd));
+            return JResult(orderService.GetOrderPageList(pageIndex, pageSize, cmccOrderId, createdTimeStart, createdTimeEnd));
         }
 
 
@@ -117,7 +121,7 @@ namespace WebSite.Controllers
         /// <returns></returns>
         public ActionResult GetSelectItem(long value)
         {
-            return JResult(service.Get_CategorySelectItem(value));
+            return JResult(categoryService.Get_CategorySelectItem(value));
         }
         /// <summary>
         /// 获取下拉框 
@@ -125,7 +129,7 @@ namespace WebSite.Controllers
         /// <returns></returns>
         public ActionResult GetAreaSelectItem()
         {
-            return JResult(service.Get_AreaList());
+            return JResult(areaService.Get_AreaList());
         }
         /// <summary>
         /// 更新12580商品库存
@@ -157,7 +161,7 @@ namespace WebSite.Controllers
 
         public ActionResult CreateOrder(OrderDto model)
         {
-            return JResult(service.CreateOrder(model.shop, model.thirdOrder, model.skuNum, model.province, model.city, model.county, model.invoiceType, model.town));
+            return JResult(orderService.CreateOrder(model.shop, model.thirdOrder, model.skuNum, model.province, model.city, model.county, model.invoiceType, model.town));
         }
 
         public ActionResult QueryJdorder(string cmccOrderId)
@@ -193,7 +197,7 @@ namespace WebSite.Controllers
         public ActionResult GetSMSPageList(int pageIndex, int pageSize,
             DateTime? createdTimeStart, DateTime? createdTimeEnd)
         {
-            return JResult(service.GetSMSPageList(pageIndex, pageSize, createdTimeStart, createdTimeEnd));
+            return JResult(smsService.GetSMSPageList(pageIndex, pageSize, createdTimeStart, createdTimeEnd));
         }
 
 
@@ -204,7 +208,7 @@ namespace WebSite.Controllers
         /// <returns></returns>
         public ActionResult FindSMS(string id)
         {
-            return JResult<SMSBatch>(service.Find_SMSBatch(id));
+            return JResult<SMSBatch>(smsService.Find_SMSBatch(id));
         }
 
 
@@ -214,7 +218,7 @@ namespace WebSite.Controllers
         /// <returns></returns>
         public ActionResult AddSMSBatch(SMSBatch model)
         {
-            return JResult(service.Add_SMSBatch(model));
+            return JResult(smsService.Add_SMSBatch(model));
         }
 
     }

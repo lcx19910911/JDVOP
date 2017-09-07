@@ -16,6 +16,8 @@ namespace WebSite.Controllers
     public class MallController : Controller
     {
         ProjectService service = new ProjectService();
+        AreaService areaService = new AreaService();
+        CategoryService categoryService = new CategoryService();
         MallInterface jdService = new JDMallService();
         protected internal JsonResult JResult<T>(T model)
         {
@@ -28,7 +30,7 @@ namespace WebSite.Controllers
 
         public ActionResult Index()
         {
-            return View(service.Get_CategorySelectItem(0));
+            return View(categoryService.Get_CategorySelectItem(0));
         }
         public ActionResult Order()
         {
@@ -38,7 +40,7 @@ namespace WebSite.Controllers
         [HttpPost]
         public ActionResult SubmitOrder()
         {
-            return JResult(service.Get_AreaList());
+            return JResult(areaService.Get_AreaList());
         }
 
         /// <summary>
@@ -48,7 +50,7 @@ namespace WebSite.Controllers
         public ActionResult GetAreaList(string value)
         {
             this.Response.Headers.Add("Access-Control-Allow-Origin", "*");
-            return JResult(service.Get_AreaList(value));
+            return JResult(areaService.Get_AreaList(value));
         }
 
     }
