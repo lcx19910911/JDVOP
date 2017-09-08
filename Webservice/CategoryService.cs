@@ -23,7 +23,7 @@ namespace Webservice
     public partial class CategoryService : BaseService
     {
         MallInterface service = new JDMallService();
-        
+
         string categoryKey = CacheHelper.RenderKey("11", "categoryKey");
 
         /// <summary>
@@ -42,7 +42,65 @@ namespace Webservice
             });
         }
 
-        
+        public void RefreshCategory()
+        {
+            int pageIndex = 1;
+            var oldList = Cache_Get_CategoryInfoList();
+            var newList = new List<CategoryInfo>();
+            var addList = new List<CategoryInfo>();
+            var searchClass = CategoryClass.One;
+            var firstCategoryResultList = service.QueryCategorys(pageIndex, 100, null, searchClass).result.categorys;
+            newList.AddRange(firstCategoryResultList);
+            foreach (var item in firstCategoryResultList)
+            {
+                if (oldList.Any(x => x.catId == item.catId))
+                {
+                    var secondCategoryResultList = service.QueryCategorys(pageIndex, 100, item.catId.GetInt(), CategoryClass.Two).result.categorys;
+                    foreach (var secondItem in secondCategoryResultList)
+                    {
+                        if (oldList.Any(x => x.catId == secondItem.catId))
+                        {
+                            var thirdCategoryResultList = service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys;
+                            var exitIdList = oldList.Where(x => x.parentId == secondItem.catId).Select(x => x.catId).ToList();
+
+                            addList.AddRange(thirdCategoryResultList.Where(x=>!exitIdList.Contains(x.catId)).ToList());
+                        }
+                        else
+                        {
+                            addList.Add(secondItem);
+                            var thirdCategoryResultList = service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys;
+                            addList.AddRange(thirdCategoryResultList);
+                        }
+                    }
+                }
+                else
+                {
+                    addList.Add(item);
+                    var secondCategoryResultList = service.QueryCategorys(pageIndex, 100, item.catId.GetInt(), CategoryClass.Two).result.categorys;
+                    addList.AddRange(secondCategoryResultList);
+                    foreach (var secondItem in secondCategoryResultList)
+                    {
+                        var thirdCategoryResultList = service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys;
+                        addList.AddRange(thirdCategoryResultList);
+                    }
+                }
+            }
+
+            using (var db = new DbRepository())
+            {
+                addList.ForEach(x =>
+                {
+                    if (x.ID.IsNullOrEmpty())
+                    {
+                        x.ID = Guid.NewGuid().ToString("N");
+                    }
+                });
+                db.CategoryInfo.AddRange(addList);
+                db.SaveChanges();
+            }
+
+        }
+
         /// <summary>
         /// 获取选择项
         /// </summary>

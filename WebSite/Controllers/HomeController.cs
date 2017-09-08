@@ -140,6 +140,18 @@ namespace WebSite.Controllers
             service.UpdateProductStock();
             return JResult(new Webservice.WebResult<bool>() { Result = true });
         }
+
+        /// <summary>
+        /// 更新分类
+        /// </summary>
+        /// <returns></returns>
+        public ActionResult ReCategory()
+        {
+            categoryService.RefreshCategory();
+            return JResult(new Webservice.WebResult<bool>() { Result = true });
+        }
+
+        
         /// <summary>
         /// 更新商品
         /// </summary>

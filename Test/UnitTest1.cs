@@ -22,12 +22,16 @@ namespace Test
     [TestClass]
     public class UnitTest1
     {
+        
         string connectStr = "data source=120.76.155.106;user id=CMCC_12580_sql;password=dfqm@201608sql;database=CMCC_12580";
         //string connectStr = "data source=.;user id=sa;password=123456;database=CMCC_12580";
         string ids = "383871,594183,2396502,1857759,1058052,2894163,874205,167546,595936,1506778,2264597,1605651,968111,1399668,2734186,1989015,2599660,2687146,3102734,2263714,2232084,2425676,1058054,2263698,595926,861100,2881770,1370589,1365533,2723770,2829222,376056,2734304,2283996,1365527,1058010,2264657,2302898,1153067,538729,1504775,3039102,1057237,603496,577083,916143,1350524,1504812,2354650,829764,997908,2599499,153363,2734194,1093078,608054,153360,874203,1077119,857977,1069555,365888,968110,2734200,2723754,2861719,666422,1102138,1576618,2377411";
         [TestMethod]
         public void TestMethod1()
         {
+            var categoryService = new CategoryService();
+            categoryService.RefreshCategory();
+
             var ttt= "{\"pOrder\":0,\"pOrders\":null,\"cOrder\":null,\"ID\":\"9653cff735d24cf2b88c39d4cbf4a787\",\"jdOrderId\":50742331509,\"CMCCOrderId\":\"170329103556269\",\"orderPrice\":99.0,\"orderNakedPrice\":84.62,\"orderTaxPrice\":14.38,\"freight\":0.0,\"sku\":[{\"skuId\":1509606,\"num\":1,\"category\":967,\"tax\":17.0,\"name\":\"怡禾康 YH-999 颈椎按摩器按摩靠垫温热红光按摩枕\",\"price\":97.0,\"taxPrice\":14.09,\"nakedPrice\":82.91,\"type\":0,\"oid\":0},{\"skuId\":1310316,\"num\":1,\"category\":6232,\"tax\":17.0,\"name\":\"【京东超市】宜洁 牙签竹制袋装200枚Y-9892\",\"price\":2.0,\"taxPrice\":0.29,\"nakedPrice\":1.71,\"type\":0,\"oid\":0}],\"DetailsJsonStr\":\"商品怡禾康 YH-999 颈椎按摩器按摩靠垫温热红光按摩枕 数量：1;\r\n商品【京东超市】宜洁 牙签竹制袋装200枚Y-9892 数量：1;\r\n\",\"State\":0,\"orderState\":1,\"StateStr\":null,\"type\":2,\"CreateTime\":\"2017 - 03 - 29T11: 29:47.5851408 + 08:00\"}";
             MallInterface service = new JDMallService();
             using (var db = new DbRepository())

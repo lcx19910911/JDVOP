@@ -48,6 +48,7 @@
             <div class="am-btn-toolbar">
                 <div class="am-btn-group am-btn-group-xs">
                     <button class="am-btn am-btn-default" id="refreshSearch" type="button">更新12580库存</button>
+                    <button class="am-btn am-btn-danger" id="refreshCategory" type="button">更新分类</button>
                     <button class="am-btn am-btn-success" id="refreshProductState" type="button">更新本地上下架和价格</button>
                     <button class="am-btn am-btn-warning am-margin-left-sm" id="getProduct" type="button">获取12580京东商品库</button>
                     <button class="am-btn am-btn-danger am-margin-left-sm" id="syncProduct" type="button">同步京东产品</button>
@@ -132,7 +133,14 @@
                 $("#imgDiv").hide();
             });
         });
-
+        
+        $("#refreshCategory").click(function () {
+            $("#loadingDiv").show();
+            $.Nuoya.action("/Home/ReCategory", {}, function (json) {
+                $.Nuoya.alert("更新完成");
+                $("#loadingDiv").hide();
+            });
+        })
         $("#refreshSearch").click(function () {
             $("#loadingDiv").show();
             $.Nuoya.action("/Home/Refresh", {}, function (json) {

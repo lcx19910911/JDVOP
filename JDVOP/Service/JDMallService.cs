@@ -228,7 +228,7 @@ namespace JDVOP.Service
                     success = false,
                     resultCode = JDErrorCode.sys_param_json_error.ToString()
                 };
-            return JDRequestHelper<CategoryPageList>.GetResult("jd.biz.product.getcategorys", new { pageNo = pageNo, pageSize = pageSize, parentId = parentId, catClass = catClass }.ToJson());
+            return JDRequestHelper<CategoryPageList>.GetResult("jd.biz.product.getcategorys", new { pageNo = pageNo, pageSize = pageSize, parentId = parentId??0, catClass = catClass }.ToJson());
         }
 
 
