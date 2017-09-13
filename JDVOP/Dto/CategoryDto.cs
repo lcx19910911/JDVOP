@@ -23,7 +23,7 @@ namespace JDVOP.Dto
         public long catId { get; set; }
         public long parentId { get; set; }
 
-        [MaxLength(32)]
+        [MaxLength(256)]
         public string name { get; set; }
         public CategoryClass catClass { get; set; }
         public int state { get; set; }

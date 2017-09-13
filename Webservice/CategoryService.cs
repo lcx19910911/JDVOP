@@ -46,11 +46,9 @@ namespace Webservice
         {
             int pageIndex = 1;
             var oldList = Cache_Get_CategoryInfoList();
-            var newList = new List<CategoryInfo>();
             var addList = new List<CategoryInfo>();
             var searchClass = CategoryClass.One;
             var firstCategoryResultList = service.QueryCategorys(pageIndex, 100, null, searchClass).result.categorys;
-            newList.AddRange(firstCategoryResultList);
             foreach (var item in firstCategoryResultList)
             {
                 if (oldList.Any(x => x.catId == item.catId))

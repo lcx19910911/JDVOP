@@ -63,6 +63,10 @@
   <ItemGroup>
     <Compile Include="CMCCDbRepository.cs" />
     <Compile Include="DbRepository.cs" />
+    <Compile Include="Migrations\201709130444426_2.cs" />
+    <Compile Include="Migrations\201709130444426_2.Designer.cs">
+      <DependentUpon>201709130444426_2.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -79,6 +83,11 @@
       <Project>{96ec7fd8-8909-4b23-9ec8-d1c44b8ecf0c}</Project>
       <Name>JDVOP</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\201709130444426_2.resx">
+      <DependentUpon>201709130444426_2.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
