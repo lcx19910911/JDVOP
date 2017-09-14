@@ -46,6 +46,7 @@ namespace Webservice
         {
             int pageIndex = 1;
             var oldList = Cache_Get_CategoryInfoList();
+            var requestList = new List<CategoryInfo>();
             var addList = new List<CategoryInfo>();
             var searchClass = CategoryClass.One;
             var firstCategoryResultList = service.QueryCategorys(pageIndex, 100, null, searchClass).result.categorys;
@@ -53,12 +54,31 @@ namespace Webservice
             {
                 if (oldList.Any(x => x.catId == item.catId))
                 {
-                    var secondCategoryResultList = service.QueryCategorys(pageIndex, 100, item.catId.GetInt(), CategoryClass.Two).result.categorys;
+                    var secondCategoryResultList = new List<CategoryInfo>();
+                    var continueList=service.QueryCategorys(pageIndex, 100, item.catId.GetInt(), CategoryClass.Two).result.categorys;
+                    secondCategoryResultList.AddRange(continueList);
+                    while (continueList != null&& continueList.Count==100)
+                    {
+                        pageIndex++;
+                        continueList = service.QueryCategorys(pageIndex, 100, item.catId.GetInt(), CategoryClass.Two).result.categorys;
+                        secondCategoryResultList.AddRange(continueList);
+                    }
+                    pageIndex = 1;
                     foreach (var secondItem in secondCategoryResultList)
                     {
                         if (oldList.Any(x => x.catId == secondItem.catId))
                         {
-                            var thirdCategoryResultList = service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys;
+                            var thirdCategoryResultList = new List<CategoryInfo>();
+                            continueList=service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys;
+                            thirdCategoryResultList.AddRange(continueList);
+                            while (continueList != null && continueList.Count == 100)
+                            {
+                                pageIndex++;
+                                continueList = service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys; 
+                                thirdCategoryResultList.AddRange(continueList);
+                            }
+
+                            pageIndex = 1;
                             var exitIdList = oldList.Where(x => x.parentId == secondItem.catId).Select(x => x.catId).ToList();
 
                             addList.AddRange(thirdCategoryResultList.Where(x=>!exitIdList.Contains(x.catId)).ToList());
@@ -66,7 +86,17 @@ namespace Webservice
                         else
                         {
                             addList.Add(secondItem);
-                            var thirdCategoryResultList = service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys;
+                            var thirdCategoryResultList = new List<CategoryInfo>();
+                            continueList = service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys;
+                            thirdCategoryResultList.AddRange(continueList);
+                            while (continueList != null && continueList.Count == 100)
+                            {
+                                pageIndex++;
+                                continueList = service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys; 
+                                thirdCategoryResultList.AddRange(continueList);
+                            }
+
+                            pageIndex = 1;
                             addList.AddRange(thirdCategoryResultList);
                         }
                     }
@@ -74,11 +104,28 @@ namespace Webservice
                 else
                 {
                     addList.Add(item);
-                    var secondCategoryResultList = service.QueryCategorys(pageIndex, 100, item.catId.GetInt(), CategoryClass.Two).result.categorys;
+                    var secondCategoryResultList = new List<CategoryInfo>();
+                    var continueList=service.QueryCategorys(pageIndex, 100, item.catId.GetInt(), CategoryClass.Two).result.categorys;
+                    secondCategoryResultList.AddRange(continueList);
+                    while (continueList != null && continueList.Count == 100)
+                    {
+                        pageIndex++;
+                        continueList = service.QueryCategorys(pageIndex, 100, item.catId.GetInt(), CategoryClass.Two).result.categorys; ;
+                        secondCategoryResultList.AddRange(continueList);
+                    }
+                    pageIndex = 1;
                     addList.AddRange(secondCategoryResultList);
                     foreach (var secondItem in secondCategoryResultList)
                     {
-                        var thirdCategoryResultList = service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys;
+                        var thirdCategoryResultList = new List<CategoryInfo>();
+                        continueList=service.QueryCategorys(pageIndex, 100, secondItem.catId.GetInt(), CategoryClass.Three).result.categorys;
+                        thirdCategoryResultList.AddRange(continueList);
+                        while (continueList != null && continueList.Count == 100)
+                        {
+                            pageIndex++;
+                            continueList = service.QueryCategorys(pageIndex, 100, item.catId.GetInt(), CategoryClass.Three).result.categorys; ;
+                            thirdCategoryResultList.AddRange(continueList);
+                        }
                         addList.AddRange(thirdCategoryResultList);
                     }
                 }
