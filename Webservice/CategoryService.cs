@@ -36,7 +36,19 @@ namespace Webservice
             {
                 using (var db = new DbRepository())
                 {
-                    List<CategoryInfo> list = db.CategoryInfo.ToList();
+                    var exitCatrgoryIdList = db.ProductInfo.Select(x => x.category).ToList();
+                    var exitIdList = new List<long>();
+                    exitCatrgoryIdList.ForEach(x =>
+                    {
+                        foreach (var item in x.Split(new[] { ';' }, StringSplitOptions.RemoveEmptyEntries))
+                        {
+                            if (!exitIdList.Any(y => y == item.GetLong()))
+                            {
+                                exitIdList.Add(item.GetLong());
+                            }
+                        }
+                    });
+                    List<CategoryInfo> list = db.CategoryInfo.Where(x=> exitIdList.Contains(x.catId)).ToList();
                     return list;
                 }
             });

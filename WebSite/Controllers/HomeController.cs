@@ -232,6 +232,10 @@ namespace WebSite.Controllers
         {
             return JResult(smsService.Add_SMSBatch(model));
         }
-
+        public ActionResult ClearCache()
+        {
+            CacheHelper.Clear();
+            return JResult("");
+        }
     }
 }
